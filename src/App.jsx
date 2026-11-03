@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 
 import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
-
+import Search from './pages/Search'
 import Header from './components/Header'
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
         <main className="p-6">
           <Routes>
             <Route path="/" element={<Home />}/>
+            <Route path="/search" element={<Search />} />
           </Routes>
         </main>
       </div>
