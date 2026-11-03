@@ -16,8 +16,9 @@ function App() {
         <Header />
 
         <main className="p-6">
-          {/* Tähän voidaan myöhemmin laittaa React Router, mutta nyt tuodaan suoraan Home */}
-          <Home />
+          <Routes>
+            <Route path="/" element={<Home />}/>
+          </Routes>
         </main>
       </div>
     </div>
