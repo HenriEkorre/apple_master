@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 export default function MovieCard({ movie }) {
   const imageUrl = movie.poster_path?.startsWith('http')
     ? movie.poster_path
@@ -5,12 +7,15 @@ export default function MovieCard({ movie }) {
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
       : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=500&q=80'
 
-  // Esimerkkiarvot: myöhemmin suoraan propsina tai API
   const worldRating = movie.vote_average ? movie.vote_average.toFixed(1) : '-'
   const friendsRating = movie.friends_average ? movie.friends_average.toFixed(1) : 'Ei arvioita'
 
   return (
-    <div className="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700/60 hover:border-indigo-500 transition-all duration-300 flex flex-col group">
+    // Koko kortti toimii linkkinä reitille /movie/:id
+    <Link 
+      to={`/movie/${movie.id}`}
+      className="bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-700/60 hover:border-indigo-500 transition-all duration-300 flex flex-col group block"
+    >
       {/* Elokuvan juliste / Kuva */}
       <div className="relative aspect-[2/3] overflow-hidden bg-gray-900">
         <img 
@@ -19,7 +24,6 @@ export default function MovieCard({ movie }) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
-
       </div>
 
       {/* Tiedot */}
@@ -45,10 +49,11 @@ export default function MovieCard({ movie }) {
           </div>
         </div>
 
-        <button className="mt-4 w-full py-2 bg-gray-700/50 hover:bg-indigo-600 text-gray-300 hover:text-white text-xs font-medium rounded-lg transition">
+        {/* katso tiedot */}
+        <div className="mt-4 w-full py-2 bg-gray-700/50 group-hover:bg-indigo-600 text-gray-300 group-hover:text-white text-xs font-medium rounded-lg transition text-center">
           Katso tiedot
-        </button>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }

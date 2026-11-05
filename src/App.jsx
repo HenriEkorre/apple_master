@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import Search from './pages/Search'
 import Header from './components/Header'
+import MovieDetails from './pages/MovieDetails'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />}/>
             <Route path="/search" element={<Search />} />
+            <Route path="/movie/:id" element={<MovieDetails />} />
           </Routes>
         </main>
       </div>

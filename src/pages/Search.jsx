@@ -1,32 +1,28 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom' 
 import axios from 'axios'
 
 export default function Search() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
   
-  const [movies, setMovies] = useState([]) // tänne tallennetaan hausta saadut elokuvat
+  const [movies, setMovies] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  //tää useeffect suoritetaan aina kun hakutermi searchquery muuttuu
   useEffect(() => {
-    // jos haku on tyhjä, tyhjennetään tulokset eikä tehdä turhia verkkokutsuja
     if (!searchQuery.trim()) {
       setMovies([])
       return
     }
-    // asynkroninen funktio backend pyyntöjä varten
+
     const fetchSearchResults = async () => {
       setLoading(true)
       setError(null)
       
       try {
-        // get pyyntö backendille porttiin 3000
         const response = await axios.get(`http://localhost:3000/api/movies/search?q=${encodeURIComponent(searchQuery)}`)
         console.log('Backendin palauttama data:', response.data)
-        // Otetaan huomioon, palauttaako backend suoraan taulukon vai objektin ja tallennetaan elokuvat stateen
         setMovies(response.data.results || response.data)
       } catch (err) {
         console.error('Virhe haussa:', err)
@@ -37,7 +33,7 @@ export default function Search() {
     }
 
     fetchSearchResults()
-  }, [searchQuery]) // koodi ajetaan uudestaan aina kun käyttäjä tekee uuden haun
+  }, [searchQuery])
 
   return (
     <div className="p-6 text-white max-w-7xl mx-auto">
@@ -65,9 +61,11 @@ export default function Search() {
       {/* Elokuvakorttien ruudukko */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {!loading && movies.map((movie) => (
-          <div 
+          
+          <Link 
             key={movie.id} 
-            className="bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:scale-105 transition-transform duration-200 border border-gray-700/50 flex flex-col"
+            to={`/movie/${movie.id}`}
+            className="bg-gray-800 rounded-xl overflow-hidden shadow-lg hover:scale-105 transition-all duration-200 border border-gray-700/50 flex flex-col group block"
           >
             {movie.poster_path ? (
               <img 
@@ -81,12 +79,15 @@ export default function Search() {
               </div>
             )}
             <div className="p-3 flex flex-col justify-between flex-grow">
-              <h3 className="font-semibold text-sm truncate text-white">{movie.title || movie.name}</h3>
+              {/* otsikko vaihtaa väriä kun kortin päälle viedään hiiri */}
+              <h3 className="font-semibold text-sm truncate text-white group-hover:text-indigo-400 transition-colors">
+                {movie.title || movie.name}
+              </h3>
               <p className="text-xs text-gray-400 mt-1">
                 {movie.release_date ? movie.release_date.split('-')[0] : (movie.first_air_date ? movie.first_air_date.split('-')[0] : 'Ei vuotta')}
               </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
