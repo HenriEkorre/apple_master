@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPopularMovies, searchMovies } from '../controllers/movieController.js'
+import { getPopularMovies, searchMovies, getMovieDetails } from '../controllers/movieController.js'
 
 const router = Router()
 
@@ -8,5 +8,8 @@ router.get('/popular', getPopularMovies)
 
 // Reitti elokuvien hakuun: GET /api/movies/search?q=hakutermi
 router.get('/search', searchMovies)
+
+// Reitti yksittäisen elokuvan tiedoille ID:n perusteella: GET /api/movies/:id
+router.get('/:id', getMovieDetails)
 
 export default router
