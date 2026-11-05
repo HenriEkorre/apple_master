@@ -4,7 +4,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cors from "cors";
 import errorHandler from "./middleware/errorHandler.js";
-import testRouter from "./routes/testRouter.js";
 import movieRouter from "./routes/movieRouter.js";
 
 const app = express();
@@ -20,7 +19,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use("/api/tests", testRouter);
 app.use("/api/movies", movieRouter);
 
 // Health check endpoint for database connectivity
