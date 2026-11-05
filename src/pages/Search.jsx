@@ -21,7 +21,7 @@ export default function Search() {
       setError(null)
       
       try {
-        const response = await axios.get(`http://localhost:3000/api/movies/search?q=${encodeURIComponent(searchQuery)}`)
+        const response = await axios.get(`/api/movies/search?q=${encodeURIComponent(searchQuery)}`)
         console.log('Backendin palauttama data:', response.data)
         setMovies(response.data.results || response.data)
       } catch (err) {
