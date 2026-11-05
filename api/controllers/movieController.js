@@ -49,7 +49,27 @@ const searchMovies = async (req, res, next) => {
   }
 }
 
+// Hae yksittäisen elokuvan tiedot ID:n perusteella
+const getMovieDetails = async (req, res, next) => {
+  try {
+    const apiKey = process.env.TMDB_API_KEY
+    const movieId = req.params.id // Ottaa elokuvan ID:n URL-osoitteesta
+
+    const response = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
+      params: {
+        api_key: apiKey,
+        language: 'fi-FI'
+      }
+    })
+
+    res.status(200).json(response.data)
+  } catch (error) {
+    next(error)
+  }
+}
+
 export {
   getPopularMovies,
-  searchMovies
+  searchMovies,
+  getMovieDetails
 }
