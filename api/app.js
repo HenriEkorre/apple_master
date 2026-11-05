@@ -14,8 +14,7 @@ const frontendDist = path.join(__dirname, "..", "dist");
 
 app.use(
 	cors({
-		origin:
-			"https://apple-master-cvgwawe3egcscwej.swedencentral-01.azurewebsites.net",
+		origin: process.env.CORS,
 	}),
 );
 app.use(express.json());
