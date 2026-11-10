@@ -93,7 +93,7 @@ export default function Groups() {
         ) : (
           <div className="col-span-2 text-center py-12 bg-gray-800/50 border border-gray-700/50 rounded-xl text-gray-400 text-sm">
             <p className="mb-3">Et kuulu vielä mihinkään ryhmään.</p>
-            <Link to="/browse-groups" className="text-indigo-400 hover:underline font-semibold">
+            <Link to="/groups/browse" className="text-sm bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 rounded-lg text-indigo-400 font-semibold transition">
               Etsi kiinnostavia ryhmiä selaamalla →
             </Link>
           </div>

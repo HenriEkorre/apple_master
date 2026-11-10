@@ -13,9 +13,14 @@ export default function Sidebar() {
     }
 
     loadMyGroups()
-    window.addEventListener('focus', loadMyGroups)
-    return () => window.removeEventListener('focus', loadMyGroups)
-  }, [location.pathname])
+
+    // Kuunnellaan custom-tapahtumaa, joka kertoo ryhmien muuttuneen
+    window.addEventListener('groups-changed', loadMyGroups)
+    
+    return () => {
+      window.removeEventListener('groups-changed', loadMyGroups)
+    }
+  }, [])
 
   const isActive = (path) => location.pathname === path
 

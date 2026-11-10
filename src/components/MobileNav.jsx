@@ -11,10 +11,9 @@ export default function MobileNav() {
 
   const navItems = [
     { path: '/', label: 'Etusivu' },
-    { path: '/search', label: 'Haku' },
-    { path: '/favorites', label: 'Suosikit' },
-    { path: '/groups', label: 'Ryhmät' },
     { path: '/profile', label: 'Profiili' },
+    { path: '/groups', label: 'Ryhmät' },
+    { path: '/favorites', label: 'Suosikit' }
   ]
 
   return (

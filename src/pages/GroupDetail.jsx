@@ -56,6 +56,10 @@ export default function GroupDetail() {
     })
 
     saveGroups(updatedGroups)
+    
+    // ILMOITETAAN MUUTOKSESTA SIDEBARILLE:
+    window.dispatchEvent(new Event('groups-changed'))
+
     setGroup(updatedGroups.find(g => String(g.id) === String(id)))
     setIsLeaveModalOpen(false)
   }
@@ -119,10 +123,19 @@ export default function GroupDetail() {
         ) : (
           <button 
             onClick={() => {
-              // Pikaliittymislogiikka testejä varten
               const allGroups = getStoredGroups()
-              const updated = allGroups.map(g => String(g.id) === String(id) ? { ...g, isMember: true, membersCount: g.membersCount + 1, members: [...g.members, { id: Date.now(), username: "Sinä", role: "member" }] } : g)
+              const updated = allGroups.map(g => String(g.id) === String(id) ? { 
+                ...g, 
+                isMember: true, 
+                membersCount: g.membersCount + 1, 
+                members: [...(g.members || []), { id: Date.now(), username: "Sinä", role: "member" }] 
+              } : g)
+              
               saveGroups(updated)
+
+              // ILMOITETAAN MUUTOKSESTA SIDEBARILLE:
+              window.dispatchEvent(new Event('groups-changed'))
+
               setGroup(updated.find(g => String(g.id) === String(id)))
             }}
             className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow transition shrink-0"
