@@ -69,7 +69,8 @@ export default function Sidebar() {
             </Link>
           </div>
 
-          <ul className="space-y-1 mb-3">
+          <ul className="space-y-1 mb-2">
+            {/* 1. Pääpainike: Omat ryhmät */}
             <li>
               <Link 
                 to="/groups" 
@@ -82,22 +83,10 @@ export default function Sidebar() {
                 Omat ryhmät
               </Link>
             </li>
-            <li>
-              <Link 
-                to="/groups/browse" 
-                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition ${
-                  isActive('/groups/browse') 
-                    ? 'bg-indigo-600 text-white font-semibold' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
-              >
-                Selaa ryhmiä
-              </Link>
-            </li>
           </ul>
 
-          {/* Omat ryhmät -lista */}
-          <div className="pl-2 space-y-1 border-l border-gray-800 ml-3">
+          {/* Omat ryhmät -lista suoraan "Omat ryhmät" -painikkeen alla */}
+          <div className="pl-2 space-y-1 border-l border-gray-800 ml-3 mb-2">
             {myGroups.length > 0 ? (
               myGroups.map((group) => {
                 const isGroupActive = location.pathname === `/groups/${group.id}`
@@ -127,6 +116,22 @@ export default function Sidebar() {
               </p>
             )}
           </div>
+
+          {/* 2. Selaa ryhmiä -painike omamielisesti alempana */}
+          <ul className="space-y-1">
+            <li>
+              <Link 
+                to="/groups/browse" 
+                className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition ${
+                  isActive('/groups/browse') 
+                    ? 'bg-indigo-600 text-white font-semibold' 
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                Selaa ryhmiä
+              </Link>
+            </li>
+          </ul>
         </div>
 
         {/* Elokuvalistat */}

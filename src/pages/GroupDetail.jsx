@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getStoredGroups, saveGroups } from '../mocks/groupStorage'
+import { useNavigate } from 'react-router-dom'
 
 export default function GroupDetail() {
   const { id } = useParams()
   const [group, setGroup] = useState(null)
+  const navigate = useNavigate()
   
   // Tila vahvistusmodaalin näkyvyydelle ja mahdolliselle virheviestille
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false)
@@ -95,9 +97,12 @@ export default function GroupDetail() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-6 text-white relative">
-      <Link to="/groups" className="text-sm text-gray-400 hover:text-white mb-4 inline-block">
-        ← Takaisin ryhmiin
-      </Link>
+      <button 
+        onClick={() => navigate(-1)} 
+        className="text-sm bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 rounded-lg text-indigo-400 font-semibold transition mb-6 inline-flex items-center gap-2 cursor-pointer"
+      >
+        ← Takaisin
+      </button>
 
       {/* Ryhmän otsikko ja toimintonappi */}
       <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
