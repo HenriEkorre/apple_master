@@ -27,14 +27,14 @@ export const createGroup = async (req, res, next) => {
     // Pakolliset kentät
     if (!name || !type) {
       return res.status(400).json({
-        message: "Name and type are required"
+        message: "Nimi ja ryhmän tyyppi ovat pakollisia"
       })
     }
 
     // Sallitaan vain enum-arvot
     if (!["public", "closed"].includes(type)) {
       return res.status(400).json({
-        message: "Type must be public or closed"
+        message: "Ryhmän tyyppi täytyy olla joko public tai closed"
       })
     }
 
