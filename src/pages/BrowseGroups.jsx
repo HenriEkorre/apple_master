@@ -111,7 +111,7 @@ export default function BrowseGroups() {
 
             {/* Alapalkki: Henkilömäärä ja siirtymäteksti */}
             <div className="flex items-center justify-between pt-3 border-t border-gray-700 text-xs text-gray-400">
-              <span>👥 {group.membersCount} jäsentä</span>
+              <span>👥 {group.members.length} jäsentä</span>
               
               <span className="text-indigo-400 group-hover:text-indigo-300 font-semibold transition flex items-center gap-1">
                 Näytä ryhmä →
