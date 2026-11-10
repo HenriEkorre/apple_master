@@ -55,14 +55,51 @@ const getMovieDetails = async (req, res, next) => {
     const apiKey = process.env.TMDB_API_KEY
     const movieId = req.params.id // Ottaa elokuvan ID:n URL-osoitteesta
 
-    const response = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
+    const movieResponse = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}`, {
       params: {
         api_key: apiKey,
         language: 'fi-FI'
       }
     })
 
-    res.status(200).json(response.data)
+    // Haetaan erillisellä kutsulla Youtube-trailerit
+    const videosResponse = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}/videos`, {
+      params: {
+        api_key: apiKey,
+        language: 'en-US' // Videotiedot haetaan englanniksi, koska trailerit voivat olla kansainvälisiä
+      }
+    })
+
+    const videos = videosResponse.data.results || []
+
+        const trailer = 
+        videos.find(
+          video =>
+            video.site === 'YouTube' &&
+            video.type === 'Trailer' &&
+            video.iso_639_1 === 'fi'  // TMDB:n videodatan kieli
+        ) ||
+        videos.find(
+          video =>
+            video.site === 'YouTube' &&
+            video.type === 'Trailer'
+        ) ||
+        videos.find(
+          video =>
+            video.site === 'YouTube' &&
+            video.type === 'Teaser'
+        )
+
+    res.status(200).json({
+      ...movieResponse.data,
+      trailer: trailer
+        ? {
+            name: trailer.name,
+            key: trailer.key,
+            embedUrl: `https://www.youtube-nocookie.com/embed/${trailer.key}`
+          }
+        : null
+    })
   } catch (error) {
     next(error)
   }
