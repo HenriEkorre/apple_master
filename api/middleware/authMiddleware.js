@@ -26,7 +26,7 @@ export const protect = async (req, res, next) => {
 
 		// Haetaan käyttäjän tiedot tietokannasta käyttäjän id:n perusteella.
 		const result = await pool.query(
-			"SELECT id, email FROM users WHERE id = $1",
+			"SELECT id, username, email FROM users WHERE id = $1",
 			[payload.sub],
 		);
 		const user = result.rows[0];

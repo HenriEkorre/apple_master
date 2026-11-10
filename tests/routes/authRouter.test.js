@@ -69,7 +69,9 @@ describe("authRouter", () => {
 			issuer: "apple-master",
 			audience: "apple-master-web",
 		});
-		query.mockResolvedValueOnce({ rows: [{ id: 1, email: "alice@example.com" }] });
+		query.mockResolvedValueOnce({
+			rows: [{ id: 1, username: "alice", email: "alice@example.com" }],
+		});
 
 		const response = await request(app)
 			.get("/api/auth/me")
@@ -77,7 +79,7 @@ describe("authRouter", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toEqual({
-			user: { id: 1, email: "alice@example.com" },
+			user: { id: 1, username: "alice", email: "alice@example.com" },
 		});
 	});
 

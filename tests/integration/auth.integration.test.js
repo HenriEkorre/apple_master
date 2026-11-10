@@ -51,9 +51,13 @@ describe("frontend-backend auth flow", () => {
 				return { rows: user ? [user] : [] };
 			}
 
-			if (sql.includes("SELECT id, email FROM users")) {
+			if (sql.includes("SELECT id, username, email FROM users")) {
 				const user = users.get(Number(params[0]));
-				return { rows: user ? [{ id: user.id, email: user.email }] : [] };
+				return {
+					rows: user
+						? [{ id: user.id, username: user.username, email: user.email }]
+						: [],
+				};
 			}
 
 			throw new Error(`Unexpected query: ${sql}`);
@@ -99,7 +103,7 @@ describe("frontend-backend auth flow", () => {
 
 		expect(sessionResponse.status).toBe(200);
 		expect(sessionResponse.body).toEqual({
-			user: { id: 1, email: "alice@example.com" },
+			user: { id: 1, username: "alice", email: "alice@example.com" },
 		});
 	});
 

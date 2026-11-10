@@ -23,7 +23,12 @@ describe("loginUser", () => {
 	test("logs in successfully and sets an auth cookie", async () => {
 		const response = createResponse();
 		query.mockResolvedValueOnce({
-			rows: [{ id: 1, email: "alice@example.com", password_hash: "hash" }],
+			rows: [{
+				id: 1,
+				username: "alice",
+				email: "alice@example.com",
+				password_hash: "hash",
+			}],
 		});
 		verify.mockResolvedValueOnce(true);
 
@@ -45,7 +50,7 @@ describe("loginUser", () => {
 			}),
 		);
 		expect(response.json).toHaveBeenCalledWith({
-			user: { id: 1, email: "alice@example.com" },
+			user: { id: 1, username: "alice", email: "alice@example.com" },
 		});
 	});
 
@@ -78,7 +83,12 @@ describe("loginUser", () => {
 	test("rejects an incorrect password", async () => {
 		const response = createResponse();
 		query.mockResolvedValueOnce({
-			rows: [{ id: 1, email: "alice@example.com", password_hash: "hash" }],
+			rows: [{
+				id: 1,
+				username: "alice",
+				email: "alice@example.com",
+				password_hash: "hash",
+			}],
 		});
 		verify.mockResolvedValueOnce(false);
 
