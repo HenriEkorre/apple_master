@@ -2,6 +2,16 @@ import { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../AuthProvider";
 
+function getErrorMessage(requestError) {
+	if (!axios.isAxiosError(requestError)) return "Authentication failed";
+
+	const error = requestError.response?.data?.error;
+	if (typeof error === "string") return error;
+	if (error && typeof error.message === "string") return error.message;
+
+	return "Authentication failed";
+}
+
 export default function AuthOverlay({ onClose }) {
 	const { login, register } = useAuth();
 	const [mode, setMode] = useState("login");
@@ -24,11 +34,7 @@ export default function AuthOverlay({ onClose }) {
 			}
 			onClose();
 		} catch (requestError) {
-			setError(
-				requestError instanceof axios.AxiosError
-					? requestError.response?.data?.error || "Authentication failed"
-					: "Authentication failed",
-			);
+			setError(getErrorMessage(requestError));
 		} finally {
 			setSubmitting(false);
 		}
