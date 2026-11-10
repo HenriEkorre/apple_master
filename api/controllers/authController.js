@@ -86,7 +86,9 @@ export const loginUser = async (req, res, next) => {
 		}
 
 		issueCookie(res, user);
-		res.json({ user: { id: user.id, email: user.email } });
+		res.json({
+			user: { id: user.id, username: user.username, email: user.email },
+		});
 	} catch (error) {
 		next(error);
 	}
