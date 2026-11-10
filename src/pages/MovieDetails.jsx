@@ -92,6 +92,8 @@ export default function MovieDetails() {
               {movie.release_date && <span>📅 {movie.release_date}</span>}
               {movie.runtime && <span>⏱️ {movie.runtime} min</span>}
               {movie.vote_average && <span>⭐ {movie.vote_average.toFixed(1)} / 10</span>}
+
+              
             </div>
 
             {/* Genret badgeina */}

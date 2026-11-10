@@ -36,7 +36,7 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+    <header className="sticky top-0 bg-gray-900 border-b border-gray-800 z-30 px-4 md:px-6 py-3.5 flex items-center justify-between gap-3 text-white">
       
       {/* 1. Logo / Teksti, joka vie aina etusivulle */}
       <Link 
