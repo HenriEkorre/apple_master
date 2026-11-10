@@ -11,6 +11,11 @@ const app = express();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDist = path.join(__dirname, "..", "dist");
+const configuredOrigin = process.env.APP_ORIGIN || "http://127.0.0.1:5173";
+const allowedOrigins =
+	process.env.NODE_ENV === "production"
+		? [configuredOrigin]
+		: [configuredOrigin, "http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use((req, res, next) => {
 	// Tarkista onko kyseessä tilaa muuttava pyyntö (POST, PUT, PATCH, DELETE)
@@ -20,7 +25,7 @@ app.use((req, res, next) => {
 	console.log("Origin:", origin);
 
 	// Tarkista, että origin on oikea.
-	if (origin && origin !== (process.env.APP_ORIGIN || "http://127.0.0.1:5173"))
+	if (origin && !allowedOrigins.includes(origin))
 		return res.status(403).json({ error: "Virheellinen Origin" });
 
 	// Tarkista, että origin on annettu pyynnössä.
