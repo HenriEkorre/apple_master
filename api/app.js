@@ -2,28 +2,46 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
-import cors from "cors";
 import errorHandler from "./middleware/errorHandler.js";
 import movieRouter from "./routes/movieRouter.js";
 import authRouter from "./routes/authRouter.js";
-import groupRouter from './routes/groupRouter.js'
-
+import groupRouter from "./routes/groupRouter.js";
+import cookieParser from "cookie-parser";
 const app = express();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const frontendDist = path.join(__dirname, "..", "dist");
+const configuredOrigin = process.env.APP_ORIGIN || "http://127.0.0.1:5173";
+const allowedOrigins =
+	process.env.NODE_ENV === "production"
+		? [configuredOrigin]
+		: [configuredOrigin, "http://localhost:5173", "http://127.0.0.1:5173"];
 
-app.use(
-	cors({
-		origin: process.env.CORS,
-	}),
-);
+app.use((req, res, next) => {
+	// Tarkista onko kyseessä tilaa muuttava pyyntö (POST, PUT, PATCH, DELETE)
+	if (!["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) return next();
+
+	const origin = req.get("origin");
+	console.log("Origin:", origin);
+
+	// Tarkista, että origin on oikea.
+	if (origin && !allowedOrigins.includes(origin))
+		return res.status(403).json({ error: "Virheellinen Origin" });
+
+	// Tarkista, että origin on annettu pyynnössä.
+	if (!origin && process.env.NODE_ENV === "production")
+		return res.status(403).json({ error: "Origin puuttuu" });
+
+	next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
 app.use("/api/movies", movieRouter);
 app.use("/api/auth", authRouter);
-app.use('/api/groups', groupRouter)
+app.use("/api/groups", groupRouter);
 
 // Health check endpoint for database connectivity
 app.get("/api/health", async (req, res) => {

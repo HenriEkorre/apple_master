@@ -43,7 +43,7 @@ services:
       - "${DB_EXPOSED_PORT}:${DB_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql
-      - ./api/init.sql:/docker-entrypoint-applemasterv1.d/apple-master-v1.sql:ro
+      - ./api/apple-master-v1.sql:/docker-entrypoint-initdb.d/apple-master-v1.sql:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]

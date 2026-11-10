@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
+import { useAuth } from '../AuthProvider'
 
-export default function Header() {
+export default function Header({ onOpenAuth }) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
 
   // Live-haku: tekee pyynnön aina kun query muuttuu (pienellä viiveellä)
   useEffect(() => {
@@ -93,6 +95,24 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {user ? (
+        <button
+          type="button"
+          onClick={logout}
+          className="shrink-0 rounded-lg bg-gray-700 px-3 py-2 text-sm text-white hover:bg-gray-600"
+        >
+          Kirjaudu ulos
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onOpenAuth}
+          className="shrink-0 rounded-lg bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
+        >
+          Kirjaudu
+        </button>
+      )}
 
     </header>
   )
