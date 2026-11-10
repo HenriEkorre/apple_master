@@ -1,9 +1,9 @@
-import express from "express";
-import { getMyGroups } from "../controllers/groupController.js";
+import express from 'express'
+import { getMyGroups } from '../controllers/groupController.js'
 
-const router = express.Router();
+const router = express.Router()
 
 // get /api/groups/all
-router.post("/all", getMyGroups);
+router.post('/all', getMyGroups)
 
-export default router;
+export default router
