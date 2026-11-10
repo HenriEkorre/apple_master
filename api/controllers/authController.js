@@ -41,8 +41,13 @@ export const registerUser = async (req, res, next) => {
 			message: "Rekisteröityminen onnistui!",
 		});
 	} catch (error) {
-		if (error.code?.startsWith("SQLITE_CONSTRAINT"))
-			return res.status(409).json({ error: "Sähköposti on jo käytössä" });
+		if (
+			error.code === "23505" ||
+			error.code?.startsWith("SQLITE_CONSTRAINT")
+		)
+			return res
+				.status(409)
+				.json({ error: "Sähköposti tai käyttäjänimi on jo käytössä" });
 
 		next(error);
 	}
