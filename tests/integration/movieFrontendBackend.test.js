@@ -44,6 +44,7 @@ describe('frontend-backend movie contract', () => {
     axios.get.mockResolvedValueOnce({
       data: { id: 550, title: 'Fight Club', overview: 'A story' },
     })
+    axios.get.mockResolvedValueOnce({ data: { results: [] } })
 
     const response = await request(app).get('/api/movies/550')
 
