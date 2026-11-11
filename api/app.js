@@ -12,8 +12,23 @@ const app = express()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const frontendDist = path.join(__dirname, '..', 'dist')
 const configuredOrigin = process.env.APP_ORIGIN || 'http://127.0.0.1:5173'
+const isProduction = process.env.NODE_ENV === 'production'
+
+if (isProduction && !configuredOrigin.startsWith('https://')) {
+  throw new Error('APP_ORIGIN must use HTTPS in production')
+}
+
+if (isProduction) {
+  app.set('trust proxy', 1)
+  app.use((req, res, next) => {
+    if (req.secure) return next()
+
+    return res.redirect(308, `https://${req.get('host')}${req.originalUrl}`)
+  })
+}
+
 const allowedOrigins =
-  process.env.NODE_ENV === 'production'
+  isProduction
     ? [configuredOrigin]
     : [configuredOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173']
 
@@ -29,7 +44,7 @@ app.use((req, res, next) => {
     return res.status(403).json({ error: 'Virheellinen Origin' })
 
   // Tarkista, että origin on annettu pyynnössä.
-  if (!origin && process.env.NODE_ENV === 'production')
+  if (!origin && isProduction)
     return res.status(403).json({ error: 'Origin puuttuu' })
 
   next()

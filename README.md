@@ -220,6 +220,13 @@ Backend:  http://localhost:3000
 Health:   http://localhost:3000/api/health
 ```
 
+### Production HTTPS
+
+In production, terminate TLS at a trusted reverse proxy and forward traffic to
+the backend. Set `NODE_ENV=production` and configure `APP_ORIGIN` with an
+`https://` URL. The backend redirects HTTP requests to HTTPS and must not be
+exposed directly to the public internet without the TLS proxy.
+
 ---
 
 ## Check container status

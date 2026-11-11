@@ -114,6 +114,23 @@ export default function MovieDetails() {
           </div>
         </div>
       </div>
+
+      {/* Elokuvan traileri */}
+      {movie.trailer && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold mb-4">Traileri</h2>
+
+          <div className="w-full aspect-video overflow-hidden rounded-2xl bg-black shadow-lg">
+            <iframe
+              src={movie.trailer.embedUrl}
+              title={movie.trailer.name || '$movie.title} - traileri'}
+              className="w-full h-full border-0"
+              allow="clipboard-write; encrypted-media; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+       </div>
+      )}
     </div>
   )
 }

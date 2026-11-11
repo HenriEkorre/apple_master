@@ -92,6 +92,7 @@ describe('Movie Controller - API Endpointit', () => {
     axios.get.mockResolvedValueOnce({
       data: { id: 550, title: 'Fight Club', overview: 'Kuvaus elokuvasta...' },
     })
+    axios.get.mockResolvedValueOnce({ data: { results: [] } })
 
     // Tehdään pyyntö tietyn elokuvan ID:llä
     const res = await request(app).get('/api/movies/550')
