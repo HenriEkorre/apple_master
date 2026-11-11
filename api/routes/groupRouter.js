@@ -1,17 +1,36 @@
 import express from 'express'
-import { getMyGroups, joinPublicGroup, inviteUserToClosedGroup } from '../controllers/groupController.js'
-
+import {
+  getMyGroups,
+  getAllGroups,
+  getMyInvitations,
+  joinPublicGroup,
+  inviteUserToClosedGroup,
+  acceptInvitation,
+  createGroup,
+  getGroupById,
+  leaveGroup,
+  removeMember,
+  updateMemberRole,
+} from '../controllers/groupController.js'
+import { protect } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-// get /api/groups/all
-router.post('/all', getMyGroups)
+// Staattiset reitit ENSIN
+router.get('/my', protect, getMyGroups)
+router.get('/browse', getAllGroups)
+router.get('/invitations', protect, getMyInvitations)
 
-// POST /api/groups/:groupId/join
-router.post('/:groupId/join', joinPublicGroup)
+// Parametrireitti vasta näiden jälkeen
+router.get('/:groupId', protect, getGroupById)
 
+router.post('/:groupId/join', protect, joinPublicGroup)
+router.post('/:groupId/invitations', protect, inviteUserToClosedGroup)
+router.post('/:groupId/accept', protect, acceptInvitation)
+router.post('/', protect, createGroup)
 
-// post /api/groups/:groupId/invitations
-router.post('/:groupId/invitations', inviteUserToClosedGroup)
+router.delete('/:groupId/membership', protect, leaveGroup)
+router.delete('/:groupId/members/:userId', protect, removeMember)
+router.patch('/:groupId/members/:userId', protect, updateMemberRole)
 
 export default router

@@ -1,19 +1,45 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
 import ProfileEntry from './ProfileEntry'
+import { useAuth } from '../AuthProvider'
 
 export default function Sidebar({ onOpenAuth }) {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
+  const { user } = useAuth()
 
   // Apufunktio tarkistamaan mikä sivu on aktiivinen
   const isActive = (path) => location.pathname === path
 
-  // Mockataan omat ryhmät -tietoa, voit korvata tämän omalla state/hook-rakenteellasi
-  const [myGroups] = useState([
-    { id: 1, name: 'Sci-Fi Ystävät' },
-    { id: 2, name: 'Leffailta' }
-  ])
+  // Haetaan omat ryhmät tietokannasta
+  const [myGroups, setMyGroups] = useState([])
+
+  useEffect(() => {
+  // Ei kirjautunutta käyttäjää: tyhjennetään lista äläkä hae mitään
+  if (!user) {
+    setMyGroups([])
+    return
+  }
+
+  const fetchMyGroups = async () => {
+    try {
+      const response = await axios.get('/api/groups/my', {
+        withCredentials: true,
+      })
+      setMyGroups(response.data)
+    } catch (error) {
+      console.error('Virhe omien ryhmien haussa sivupalkissa:', error)
+      setMyGroups([])
+    }
+  }
+
+  fetchMyGroups()
+
+  // Päivitetään lista aina kun ryhmät muuttuvat (liittyminen, poistuminen, luonti)
+  window.addEventListener('groups-changed', fetchMyGroups)
+  return () => window.removeEventListener('groups-changed', fetchMyGroups)
+  }, [user?.id])
 
   return (
     /* hidden md:flex: piilossa mobiilissa, näkyy md-koosta ylöspäin */
@@ -92,7 +118,7 @@ export default function Sidebar({ onOpenAuth }) {
                       <div className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 transition ${
                         isGroupActive ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 group-hover:bg-gray-700'
                       }`}>
-                        {group.name.charAt(0).toUpperCase()}
+                        {group.name ? group.name.charAt(0).toUpperCase() : '?'}
                       </div>
                       <span className="truncate">{group.name}</span>
                     </Link>

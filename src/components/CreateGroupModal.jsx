@@ -1,28 +1,50 @@
 import { useState } from 'react'
+import axios from 'axios'
 
-export default function CreateGroupModal({ isOpen, onClose, onCreateGroup }) {
+export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [type, setType] = useState('public') // 'public' tai 'closed'
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   if (!isOpen) return null
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!name.trim()) return
 
-    // Lähetetään uuden ryhmän tiedot ylöspäin
-    onCreateGroup({
-      name,
-      description,
-      type
-    })
+    setLoading(true)
+    setError(null)
 
-    // Tyhjennetään kentät ja suljetaan modaali
-    setName('')
-    setDescription('')
-    setType('public')
-    onClose()
+    try {
+      // Lähetetään tiedot suoraan backendin endpointille
+      const response = await axios.post(
+        '/api/groups',
+        { 
+          name: name.trim(), 
+          description: description.trim(), 
+          type 
+        },
+        { withCredentials: true } // Varmistaa, että evästekirjautuminen välittyy mukaan
+      )
+
+      // Jos ylätason komponentti antoi funktion, kerrotaan sille luodusta ryhmästä
+      if (onGroupCreated) {
+        onGroupCreated(response.data)
+      }
+
+      // Tyhjennetään kentät ja suljetaan modaali
+      setName('')
+      setDescription('')
+      setType('public')
+      onClose()
+    } catch (err) {
+      console.error('Virhe ryhmän luonnissa:', err)
+      setError(err.response?.data?.message || 'Ryhmän luonti epäonnistui')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -32,11 +54,18 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup }) {
           <h2 className="text-xl font-bold">Luo uusi ryhmä</h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-lg font-bold px-2"
+            type="button"
+            className="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer"
           >
             ✕
           </button>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 text-xs rounded-xl">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -73,7 +102,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup }) {
             <select 
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
+              className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
               <option value="public">Julkinen (kaikki voivat liittyä suoraan)</option>
               <option value="closed">Suljettu (vaatii liittymispyynnön)</option>
@@ -84,15 +113,17 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup }) {
             <button 
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 hover:bg-gray-600 transition"
+              disabled={loading}
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 hover:bg-gray-600 transition cursor-pointer"
             >
               Peruuta
             </button>
             <button 
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 transition shadow"
+              disabled={loading}
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 transition shadow cursor-pointer disabled:opacity-50"
             >
-              Luo ryhmä
+              {loading ? 'Luodaan...' : 'Luo ryhmä'}
             </button>
           </div>
         </form>
