@@ -48,10 +48,11 @@ describe('movieRouter', () => {
 
   test('routes movie IDs to the details controller', async () => {
     axios.get.mockResolvedValueOnce({ data: { id: 550, title: 'Fight Club' } })
+    axios.get.mockResolvedValueOnce({ data: { results: [] } })
 
     const response = await request(app).get('/api/movies/550')
 
     expect(response.status).toBe(200)
-    expect(response.body).toEqual({ id: 550, title: 'Fight Club' })
+    expect(response.body).toEqual({ id: 550, title: 'Fight Club', trailer: null })
   })
 })
