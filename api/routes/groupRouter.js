@@ -1,5 +1,6 @@
 import express from 'express'
-import { getMyGroups, joinPublicGroup } from '../controllers/groupController.js'
+import { getMyGroups, joinPublicGroup, inviteUserToClosedGroup } from '../controllers/groupController.js'
+
 
 const router = express.Router()
 
@@ -8,5 +9,9 @@ router.post('/all', getMyGroups)
 
 // POST /api/groups/:groupId/join
 router.post('/:groupId/join', joinPublicGroup)
+
+
+// post /api/groups/:groupId/invitations
+router.post('/:groupId/invitations', inviteUserToClosedGroup)
 
 export default router
