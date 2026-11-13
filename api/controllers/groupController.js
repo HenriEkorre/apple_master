@@ -46,24 +46,6 @@ export const getMyInvitations = async (req, res, next) => {
     next(error)
   }
 }
-
-export const inviteUserToClosedGroup = async (req, res, next) => {
-  try {
-    const rawGroupId = req.params.groupId
-    const rawUserId = req.body.userId
-
-    const groupId = Number(rawGroupId)
-    const invitedUserId = Number(rawUserId)
-    const currentUserId = Number(req.user.id)
-
-    // Validoi ryhmän tunnus ennen tietokantakyselyitä
-    if (
-      rawGroupId === undefined ||
-      rawGroupId === null ||
-      rawGroupId === '' ||
-      !Number.isInteger(groupId) ||
-      groupId <= 0
-    ) {
       
 // Julkiseen ryhmään liittyminen
 export const joinPublicGroup = async (req, res, next) => {
