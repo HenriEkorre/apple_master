@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
+import MovieDetailsSkeleton from '../components/MovieDetailsSkeleton'
 
 export default function MovieDetails() {
   // Nappaa elokuvan ID URL-osoitteesta 
@@ -34,13 +35,9 @@ export default function MovieDetails() {
     }
   }, [id])
 
-  // Näytetään latausteksti, kun tietoja haetaan
+  // Näytetään skeleton, kun tietoja haetaan
   if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <p className="text-gray-600 dark:text-gray-300 text-lg">Ladataan elokuvan tietoja...</p>
-      </div>
-    )
+    return <MovieDetailsSkeleton />
   }
 
   // Jos tulee virhe
@@ -70,10 +67,10 @@ export default function MovieDetails() {
           <img 
             src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
             alt={movie.title} 
-            className="w-full md:w-72 rounded-xl object-cover shadow-md"
+            className="w-full md:w-72 aspect-[2/3] rounded-xl object-cover shadow-md bg-gray-200 dark:bg-gray-700"
           />
         ) : (
-          <div className="w-full md:w-72 h-96 bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center text-gray-400">
+          <div className="w-full md:w-72 aspect-[2/3] bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center text-gray-400">
             Ei kuvaa
           </div>
         )}
