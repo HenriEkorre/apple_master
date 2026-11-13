@@ -70,11 +70,12 @@ describe('movieController unit tests', () => {
     const response = createResponse()
     const movie = { id: 550, title: 'Fight Club' }
     axios.get.mockResolvedValueOnce({ data: movie })
+    axios.get.mockResolvedValueOnce({ data: { results: [] } })
 
     await getMovieDetails({ params: { id: '550' } }, response, vi.fn())
 
     expect(response.status).toHaveBeenCalledWith(200)
-    expect(response.json).toHaveBeenCalledWith(movie)
+    expect(response.json).toHaveBeenCalledWith({ ...movie, trailer: null })
     expect(axios.get).toHaveBeenCalledWith(
       'https://api.themoviedb.org/3/movie/550',
       {

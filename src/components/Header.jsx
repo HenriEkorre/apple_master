@@ -6,43 +6,80 @@ import { useAuth } from '../AuthProvider'
 
 export default function Header({ onOpenAuth }) {
   const [query, setQuery] = useState('')
-  const [suggestions, setSuggestions] = useState([])
+  const [movieSuggestions, setMovieSuggestions] = useState([])
+  const [groupSuggestions, setGroupSuggestions] = useState([])
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
-  // Live-haku: tekee pyynnön aina kun query muuttuu (pienellä viiveellä)
+  // Live-haku: hakee elokuvat ja ryhmät backendistä kun query muuttuu
   useEffect(() => {
-    if (query.trim() === '') {
-      setSuggestions([])
+    const trimmedQuery = query.trim()
+
+    if (trimmedQuery === '') {
+      setMovieSuggestions([])
+      setGroupSuggestions([])
       return
     }
 
+    // Estää vanhentuneen vastauksen ylikirjoittamasta uudempaa hakua
+    let cancelled = false
+
     const delayDebounceFn = setTimeout(() => {
+      // 1. Hae elokuvat backendistä (max 3 kpl)
       axios
-        .get(`/api/movies/search?q=${encodeURIComponent(query.trim())}`)
+        .get(`/api/movies/search?q=${encodeURIComponent(trimmedQuery)}`)
         .then((response) => {
-          setSuggestions(response.data.slice(0, 3))
+          if (cancelled) return
+          const results = response.data.results || response.data
+          setMovieSuggestions(results.slice(0, 3))
         })
         .catch((error) => {
           console.error('Virhe ehdotusten haussa:', error)
         })
+
+      // 2. Hae ryhmät backendistä (max 3 kpl). Ryhmähaku vaatii kirjautumisen.
+      if (user) {
+        axios
+          .get(`/api/groups/search?q=${encodeURIComponent(trimmedQuery)}&limit=3`, {
+            withCredentials: true,
+          })
+          .then((response) => {
+            if (cancelled) return
+            setGroupSuggestions(response.data.slice(0, 3))
+          })
+          .catch((error) => {
+            console.error('Virhe ryhmäehdotusten haussa:', error)
+            if (!cancelled) setGroupSuggestions([])
+          })
+      } else {
+        setGroupSuggestions([])
+      }
     }, 300)
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [query])
+    return () => {
+      cancelled = true
+      clearTimeout(delayDebounceFn)
+    }
+  }, [query, user?.id])
 
   const handleSearch = (e) => {
     e.preventDefault()
     if (!query.trim()) return
 
-    setSuggestions([])
+    // Ohjataan käyttäjä hakutulossivulle, jossa näkyvät kaikki tulokset
     navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+
+    setMovieSuggestions([])
+    setGroupSuggestions([])
+    setQuery('')
   }
 
+  const hasSuggestions = movieSuggestions.length > 0 || groupSuggestions.length > 0
+
   return (
-    <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-      {/* 1. Logo / Teksti, joka vie aina etusivulle */}
+    <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 px-4 md:px-6 py-4 flex items-center justify-between gap-3">
+      {/* 1. Logo / Teksti */}
       <Link
         to="/"
         className="md:hidden font-bold text-sm tracking-wider text-gray-900 dark:text-white shrink-0 hover:text-indigo-500 transition"
@@ -57,7 +94,7 @@ export default function Header({ onOpenAuth }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Hae elokuvaa..."
+            placeholder="Hae elokuvaa tai ryhmää..." 
             className="w-full px-3 py-1.5 md:px-4 md:py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
@@ -77,51 +114,87 @@ export default function Header({ onOpenAuth }) {
         </form>
 
         {/* Live-ehdotukset (Dropdown) */}
-        {suggestions.length > 0 && (
+        {hasSuggestions && (
           <div className="absolute left-0 right-14 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl overflow-hidden z-50">
-            {suggestions.map((movie) => (
-              <Link
-                key={movie.id}
-                to={`/movie/${movie.id}`}
-                onClick={() => {
-                  setSuggestions([])
-                  setQuery('')
-                }}
-                className="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition border-b border-gray-100 dark:border-gray-800 last:border-none"
-              >
-                <img
-                  src={
-                    movie.poster_path
-                      ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                      : 'https://via.placeholder.com/40x60?text=Ei+kuvaa'
-                  }
-                  alt={movie.title}
-                  className="w-8 h-12 object-cover rounded shadow"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white truncate">
-                    {movie.title}
-                  </h4>
-                  <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
-                    {movie.release_date
-                      ? movie.release_date.split('-')[0]
-                      : 'Ei vuotta'}
-                  </p>
+            
+            {/* ELOKUVAT */}
+            {movieSuggestions.length > 0 && (
+              <div>
+                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  Elokuvat
                 </div>
-              </Link>
-            ))}
+                {movieSuggestions.map((movie) => (
+                  <Link
+                    key={`movie-${movie.id}`}
+                    to={`/movie/${movie.id}`}
+                    onClick={() => {
+                      setMovieSuggestions([])
+                      setGroupSuggestions([])
+                      setQuery('')
+                    }}
+                    className="flex items-center gap-3 p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition border-b border-gray-100 dark:border-gray-800"
+                  >
+                    <img 
+                      src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : 'https://via.placeholder.com/40x60?text=Ei+kuvaa'} 
+                      alt={movie.title}
+                      className="w-8 h-12 object-cover rounded shadow"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white truncate">{movie.title}</h4>
+                      <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+                        {movie.release_date ? movie.release_date.split('-')[0] : 'Ei vuotta'}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* RYHMÄT */}
+            {groupSuggestions.length > 0 && (
+              <div>
+                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-t border-gray-200 dark:border-gray-700">
+                  Ryhmät
+                </div>
+                {groupSuggestions.map((group) => (
+                  <Link
+                    key={`group-${group.id}`}
+                    to={`/groups/${group.id}`}
+                    onClick={() => {
+                      setMovieSuggestions([])
+                      setGroupSuggestions([])
+                      setQuery('')
+                    }}
+                    className="flex items-center justify-between p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition border-b border-gray-100 dark:border-gray-800 last:border-none"
+                  >
+                    <div className="flex-1 min-w-0 pr-2">
+                      <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white truncate">{group.name}</h4>
+                      <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {group.type === 'closed' ? 'Suljettu · ' : ''}
+                        {group.description || 'Ei kuvausta'}
+                      </p>
+                    </div>
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-semibold shrink-0">
+                      {group.member_count ?? 0} jäs.
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+
           </div>
         )}
       </div>
 
-      <div className="hidden md:block lg:block absolute right-0 mt-1 mr-2 ">
+      {/* Teeman vaihto & käyttäjän painikkeet */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={toggleTheme}
-          className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+          className="rounded-lg p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
         >
           <svg
-            className="mx-auto size-5 fill-current"
+            className="size-5 fill-current"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
@@ -132,9 +205,7 @@ export default function Header({ onOpenAuth }) {
             )}
           </svg>
         </button>
-      </div>
 
-      <div className="hidden items-center gap-2 md:flex">
         {user && (
           <button
             type="button"
