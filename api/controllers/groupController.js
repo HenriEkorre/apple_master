@@ -64,7 +64,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       !Number.isInteger(groupId) ||
       groupId <= 0
     ) {
-=======
+      
 // Julkiseen ryhmään liittyminen
 export const joinPublicGroup = async (req, res, next) => {
   try {
