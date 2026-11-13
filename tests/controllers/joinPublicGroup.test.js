@@ -158,7 +158,7 @@ describe('joinPublicGroup', () => {
     expect(res.status).toHaveBeenCalledWith(403)
 
     expect(res.json).toHaveBeenCalledWith({
-      message: 'Suljettuun ryhmään ei voi liittyä suoraan'
+      message: 'Suljettuun ryhmään pääsee vain kutsulla'
     })
 
     expect(next).not.toHaveBeenCalled()
