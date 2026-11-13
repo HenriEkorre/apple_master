@@ -598,3 +598,39 @@ export const updateMemberRole = async (req, res, next) => {
     next(error)
   }
 }
+
+// Hae ryhmiä nimen tai kuvauksen perusteella (GET /api/groups/search?q=...&limit=...)
+export const searchGroups = async (req, res, next) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
+
+    // Tyhjällä haulla ei palauteta mitään
+    if (!q) {
+      return res.status(200).json([])
+    }
+
+    // Rajoitetaan tulosten määrä (oletus 20, enintään 50)
+    const requestedLimit = Number(req.query.limit)
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 50)
+      : 20
+
+    
+    const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`
+
+    const result = await pool.query(
+      `SELECT g.id, g.name, g.description, g.type,
+        (SELECT COUNT(*) FROM group_members gm
+         WHERE gm.group_id = g.id AND gm.status = 'active')::int AS member_count
+       FROM groups g
+       WHERE g.name ILIKE $1 OR g.description ILIKE $1
+       ORDER BY g.name
+       LIMIT $2`,
+      [pattern, limit]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    next(error)
+  }
+}

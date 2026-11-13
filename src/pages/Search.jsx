@@ -1,54 +1,83 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link } from 'react-router-dom' 
 import axios from 'axios'
-import { getStoredGroups } from '../mocks/groupStorage'
+import { useAuth } from '../AuthProvider'
 
 export default function Search() {
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('q') || ''
+  const { user } = useAuth()
   
   const [movies, setMovies] = useState([])
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [groupsError, setGroupsError] = useState(null)
 
   useEffect(() => {
     if (!searchQuery.trim()) {
       setMovies([])
       setGroups([])
+      setError(null)
+      setGroupsError(null)
       return
     }
+
+    // Estää vanhentuneen vastauksen ylikirjoittamasta uudempaa hakua
+    let cancelled = false
 
     const fetchAllResults = async () => {
       setLoading(true)
       setError(null)
-      
-      try {
-        const queryLower = searchQuery.toLowerCase()
+      setGroupsError(null)
 
-        // 1. Haetaan elokuvat backendistä
-        const movieResponse = await axios.get(`/api/movies/search?q=${encodeURIComponent(searchQuery)}`)
-        const movieResults = movieResponse.data.results || movieResponse.data
-        setMovies(movieResults)
+      // Haetaan elokuvat ja ryhmät rinnakkain, jotta toisen epäonnistuminen ei estä toista
+      const moviesRequest = axios.get(
+        `/api/movies/search?q=${encodeURIComponent(searchQuery)}`
+      )
 
-        // 2. Haetaan ja suodatetaan ryhmät paikallisesta muistista
-        const allGroups = getStoredGroups()
-        const matchingGroups = allGroups.filter(g => 
-          g.name.toLowerCase().includes(queryLower) || 
-          (g.description && g.description.toLowerCase().includes(queryLower))
-        )
-        setGroups(matchingGroups)
+      // Ryhmähaku vaatii kirjautumisen
+      const groupsRequest = user
+        ? axios.get(`/api/groups/search?q=${encodeURIComponent(searchQuery)}`, {
+            withCredentials: true,
+          })
+        : Promise.resolve(null)
 
-      } catch (err) {
-        console.error('Virhe haussa:', err)
+      const [movieResult, groupResult] = await Promise.allSettled([
+        moviesRequest,
+        groupsRequest,
+      ])
+
+      if (cancelled) return
+
+      // 1. Elokuvat
+      if (movieResult.status === 'fulfilled') {
+        const movieData = movieResult.value.data
+        setMovies(movieData.results || movieData)
+      } else {
+        console.error('Virhe elokuvahaussa:', movieResult.reason)
+        setMovies([])
         setError('Hakutulosten hakeminen epäonnistui.')
-      } finally {
-        setLoading(false)
       }
+
+      // 2. Ryhmät
+      if (groupResult.status === 'fulfilled') {
+        setGroups(groupResult.value ? groupResult.value.data : [])
+      } else {
+        console.error('Virhe ryhmähaussa:', groupResult.reason)
+        setGroups([])
+        setGroupsError('Ryhmien hakeminen epäonnistui.')
+      }
+
+      setLoading(false)
     }
 
     fetchAllResults()
-  }, [searchQuery])
+
+    return () => {
+      cancelled = true
+    }
+  }, [searchQuery, user?.id])
 
   return (
     <div className="p-4 md:p-6 text-white max-w-7xl mx-auto">
@@ -71,6 +100,19 @@ export default function Search() {
         </div>
       )}
 
+      {groupsError && (
+        <div className="bg-red-900/50 border border-red-700 p-4 rounded-lg mb-6 text-red-200 text-sm">
+          {groupsError}
+        </div>
+      )}
+
+      {/* Ryhmähaku vaatii kirjautumisen */}
+      {!user && searchQuery && !loading && (
+        <div className="bg-gray-800/60 border border-gray-700/50 p-4 rounded-lg mb-6 text-gray-300 text-sm">
+          Kirjaudu sisään nähdäksesi myös ryhmähaun tulokset.
+        </div>
+      )}
+
       {/* --- RYHMÄT -TULOKSET --- */}
       {!loading && groups.length > 0 && (
         <div className="mb-10">
@@ -85,8 +127,10 @@ export default function Search() {
                 <h4 className="font-bold text-base text-white group-hover:text-indigo-400 transition mb-1">{group.name}</h4>
                 <p className="text-xs text-gray-400 line-clamp-2 mb-3">{group.description || 'Ei kuvausta'}</p>
                 <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span className="capitalize px-2 py-0.5 rounded bg-gray-900">{group.type}</span>
-                  <span>{group.members ? group.members.length : 1} jäsentä</span>
+                  <span className="capitalize px-2 py-0.5 rounded bg-gray-900">
+                    {group.type === 'closed' ? 'closed · kutsulla' : group.type}
+                  </span>
+                  <span>{group.member_count ?? 0} jäsentä</span>
                 </div>
               </Link>
             ))}
@@ -131,7 +175,7 @@ export default function Search() {
       )}
 
       {/* Ei mitään tuloksia */}
-      {!loading && searchQuery && movies.length === 0 && groups.length === 0 && !error && (
+      {!loading && searchQuery && movies.length === 0 && groups.length === 0 && !error && !groupsError && (
         <p className="text-gray-400 text-sm mt-6">Ei löytynyt elokuvia tai ryhmiä hakusanalla "{searchQuery}".</p>
       )}
 

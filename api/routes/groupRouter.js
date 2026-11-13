@@ -11,6 +11,7 @@ import {
   leaveGroup,
   removeMember,
   updateMemberRole,
+  searchGroups
 } from '../controllers/groupController.js'
 import { protect } from '../middleware/authMiddleware.js'
 
@@ -19,6 +20,7 @@ const router = express.Router()
 // Staattiset reitit ENSIN
 router.get('/my', protect, getMyGroups)
 router.get('/browse', getAllGroups)
+router.get('/search', protect, searchGroups) 
 router.get('/invitations', protect, getMyInvitations)
 
 // Parametrireitti vasta näiden jälkeen

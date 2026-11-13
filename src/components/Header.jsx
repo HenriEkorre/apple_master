@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
-import { getStoredGroups } from '../mocks/groupStorage'
 import { useTheme } from '../ThemeProvider'
 import { useAuth } from '../AuthProvider'
 
@@ -13,9 +12,9 @@ export default function Header({ onOpenAuth }) {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
-  // Live-haku: tekee pyynnön elokuvista ja suodattaa ryhmät kun query muuttuu
+  // Live-haku: hakee elokuvat ja ryhmät backendistä kun query muuttuu
   useEffect(() => {
-    const trimmedQuery = query.trim().toLowerCase()
+    const trimmedQuery = query.trim()
 
     if (trimmedQuery === '') {
       setMovieSuggestions([])
@@ -23,11 +22,15 @@ export default function Header({ onOpenAuth }) {
       return
     }
 
+    // Estää vanhentuneen vastauksen ylikirjoittamasta uudempaa hakua
+    let cancelled = false
+
     const delayDebounceFn = setTimeout(() => {
       // 1. Hae elokuvat backendistä (max 3 kpl)
       axios
-        .get(`/api/movies/search?q=${encodeURIComponent(query.trim())}`)
+        .get(`/api/movies/search?q=${encodeURIComponent(trimmedQuery)}`)
         .then((response) => {
+          if (cancelled) return
           const results = response.data.results || response.data
           setMovieSuggestions(results.slice(0, 3))
         })
@@ -35,19 +38,30 @@ export default function Header({ onOpenAuth }) {
           console.error('Virhe ehdotusten haussa:', error)
         })
 
-      // 2. Hae ja suodata julkiset ryhmät paikallisesta muistista (max 3 kpl)
-      const allGroups = getStoredGroups()
-      const matchingGroups = allGroups.filter(g => 
-        g.type === 'public' && 
-        (g.name.toLowerCase().includes(trimmedQuery) || 
-         (g.description && g.description.toLowerCase().includes(trimmedQuery)))
-      )
-      setGroupSuggestions(matchingGroups.slice(0, 3))
-
+      // 2. Hae ryhmät backendistä (max 3 kpl). Ryhmähaku vaatii kirjautumisen.
+      if (user) {
+        axios
+          .get(`/api/groups/search?q=${encodeURIComponent(trimmedQuery)}&limit=3`, {
+            withCredentials: true,
+          })
+          .then((response) => {
+            if (cancelled) return
+            setGroupSuggestions(response.data.slice(0, 3))
+          })
+          .catch((error) => {
+            console.error('Virhe ryhmäehdotusten haussa:', error)
+            if (!cancelled) setGroupSuggestions([])
+          })
+      } else {
+        setGroupSuggestions([])
+      }
     }, 300)
 
-    return () => clearTimeout(delayDebounceFn)
-  }, [query])
+    return () => {
+      cancelled = true
+      clearTimeout(delayDebounceFn)
+    }
+  }, [query, user?.id])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -156,11 +170,12 @@ export default function Header({ onOpenAuth }) {
                     <div className="flex-1 min-w-0 pr-2">
                       <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white truncate">{group.name}</h4>
                       <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {group.type === 'closed' ? 'Suljettu · ' : ''}
                         {group.description || 'Ei kuvausta'}
                       </p>
                     </div>
                     <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-semibold shrink-0">
-                      {group.members ? group.members.length : 1} jäs.
+                      {group.member_count ?? 0} jäs.
                     </span>
                   </Link>
                 ))}
