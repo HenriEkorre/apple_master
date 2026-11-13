@@ -50,7 +50,7 @@ export const joinPublicGroup = async (req, res, next) => {
 
     if (group.type !== 'public') {
       return res.status(403).json({
-        message: 'Suljettuun ryhmään ei voi liittyä suoraan'
+        message: 'Suljettuun ryhmään pääsee vain kutsulla'
       })
     }
 
