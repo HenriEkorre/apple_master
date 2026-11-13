@@ -107,7 +107,7 @@ export const joinPublicGroup = async (req, res, next) => {
 }
 
 // Lähetä käyttäjälle kutsu suljettuun ryhmään
-// Kutsuttava voidaan antaa joko käyttäjänimellä (username) tai tunnuksella (userId)
+// Kutsuttava voidaan antaa joko käyttäjänimellä (username) tai tunnuksella (userId)!!!!
 export const inviteUserToClosedGroup = async (req, res, next) => {
   try {
     const adminId = req.user.id
