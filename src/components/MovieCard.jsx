@@ -41,17 +41,17 @@ export default function MovieCard({ movie }) {
           </p>
 
           {/* Arviot eriteltynä */}
-          <div className="space-y-1.5 bg-gray-900 dark:bg-gray-200/20 p-2.5 rounded-lg border border-gray-700/50 text-xs">
+          <div className="space-y-1.5 bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/50 text-gray-800 dark:text-gray-200 text-xs">
             <div className="flex items-center justify-between text-gray-300">
-              <span className="text-gray-400">Kaikki:</span>
+              <span className="text-xs text-gray-900 dark:text-white">Kaikki:</span>
               <span className="font-semibold text-amber-400">
-                ⭐ {worldRating} / 10
+                 {worldRating} / 10
               </span>
             </div>
             <div className="flex items-center justify-between text-gray-300">
-              <span className="text-gray-400">Kaverit:</span>
+              <span className="text-xs text-gray-900 dark:text-white">Kaverit:</span>
               <span className="font-semibold text-indigo-400">
-                👥 {friendsRating}
+                 {friendsRating} / 5
               </span>
             </div>
           </div>

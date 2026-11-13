@@ -229,7 +229,7 @@ export default function GroupDetail() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 text-white text-center">
+      <div className="max-w-4xl mx-auto p-6 text-gray-900 dark:text-white text-center">
         <p>Ladataan ryhmää...</p>
       </div>
     )
@@ -237,11 +237,11 @@ export default function GroupDetail() {
 
   if (error || !group) {
     return (
-      <div className="max-w-4xl mx-auto p-6 text-white">
+      <div className="max-w-4xl mx-auto p-6 text-gray-900 dark:text-white">
         <p>{error || 'Ryhmää ei löytynyt.'}</p>
         <Link
           to="/groups"
-          className="text-indigo-400 hover:underline mt-2 inline-block"
+          className="text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block"
         >
           ← Takaisin ryhmiin
         </Link>
@@ -277,7 +277,7 @@ export default function GroupDetail() {
     return (
       <li
         key={member.id}
-        className="text-sm text-gray-300 flex justify-between items-center gap-2 bg-gray-900/40 p-2.5 rounded-lg border border-gray-700/50"
+        className="text-sm text-gray-700 dark:text-gray-300 flex justify-between items-center gap-2 bg-gray-100 dark:bg-gray-900/40 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/50"
       >
         <span className="font-medium truncate">
           {member.username}
@@ -285,7 +285,7 @@ export default function GroupDetail() {
         </span>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-indigo-300 uppercase font-semibold">
+          <span className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 uppercase font-semibold">
             {isInvited ? 'kutsuttu' : member.role}
           </span>
 
@@ -302,7 +302,7 @@ export default function GroupDetail() {
                       member.role === 'admin' ? 'member' : 'admin',
                     )
                   }
-                  className="text-xs px-2 py-0.5 rounded bg-gray-700 hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
+                  className="text-xs px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
                 >
                   {member.role === 'admin' ? 'Poista admin' : 'Nimeä admin'}
                 </button>
@@ -314,7 +314,7 @@ export default function GroupDetail() {
                   type="button"
                   disabled={busy}
                   onClick={() => handleRemoveMember(member)}
-                  className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer disabled:opacity-50"
+                  className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-500/30 transition cursor-pointer disabled:opacity-50"
                 >
                   {isInvited ? 'Peru kutsu' : 'Poista'}
                 </button>
@@ -332,7 +332,7 @@ export default function GroupDetail() {
       return (
         <button
           onClick={openLeaveModal}
-          className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30 transition shrink-0 cursor-pointer"
+          className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition shrink-0 cursor-pointer"
         >
           Poistu ryhmästä
         </button>
@@ -353,7 +353,7 @@ export default function GroupDetail() {
           <button
             onClick={handleDeclineInvitation}
             disabled={respondBusy}
-            className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-700 hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
           >
             Hylkää
           </button>
@@ -364,7 +364,7 @@ export default function GroupDetail() {
     // Suljettuun ryhmään pääsee vain kutsulla
     if (isClosed) {
       return (
-        <span className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-lg shrink-0">
+        <span className="text-xs text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-2 rounded-lg shrink-0">
           Vain kutsulla
         </span>
       )
@@ -383,34 +383,34 @@ export default function GroupDetail() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 text-white relative">
+    <div className="max-w-4xl mx-auto p-4 md:p-6 text-gray-900 dark:text-white relative">
       <button
         onClick={() => navigate(-1)}
-        className="text-sm bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 rounded-lg text-indigo-400 font-semibold transition mb-6 inline-flex items-center gap-2 cursor-pointer"
+        className="text-sm bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-lg text-indigo-600 dark:text-indigo-400 font-semibold transition mb-6 inline-flex items-center gap-2 cursor-pointer"
       >
         ← Takaisin
       </button>
 
       {/* Ryhmän otsikko ja toimintonappi */}
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-2xl font-bold">{group.name}</h1>
             <span
               className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded ${
                 group.type === 'public'
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-amber-500/20 text-amber-400'
+                  ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
               }`}
             >
               {group.type}
             </span>
           </div>
-          <p className="text-gray-300 text-sm">
+          <p className="text-gray-700 dark:text-gray-300 text-sm">
             {group.description || 'Ei kuvausta'}
           </p>
           {myStatus === 'pending' && (
-            <p className="text-xs text-indigo-300 mt-2">
+            <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-2">
               Sinut on kutsuttu tähän ryhmään.
             </p>
           )}
@@ -420,24 +420,24 @@ export default function GroupDetail() {
       </div>
 
       {actionError && (
-        <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-300 text-xs rounded-xl">
+        <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 text-red-700 dark:text-red-300 text-xs rounded-xl">
           {actionError}
         </div>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Jäsenet */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-5">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <h3 className="font-bold text-lg mb-3">Jäsenet</h3>
 
           {memberError && (
-            <div className="mb-3 p-3 bg-red-500/20 border border-red-500/50 text-red-300 text-xs rounded-xl">
+            <div className="mb-3 p-3 bg-red-500/20 border border-red-500/50 text-red-700 dark:text-red-300 text-xs rounded-xl">
               {memberError}
             </div>
           )}
 
           {membersHidden ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Jäsenlista näkyy vain ryhmän jäsenille.
               {group.member_count !== undefined &&
                 ` Ryhmässä on ${group.member_count} jäsentä.`}
@@ -451,7 +451,7 @@ export default function GroupDetail() {
               {/* Lähetetyt kutsut näytetään vain ylläpitäjälle */}
               {isAdmin && invitedMembers.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                     Lähetetyt kutsut
                   </h4>
                   <ul className="space-y-2">
@@ -461,13 +461,13 @@ export default function GroupDetail() {
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">Ei jäseniä vielä.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Ei jäseniä vielä.</p>
           )}
 
           {/* Kutsulomake: vain suljetun ryhmän ylläpitäjälle */}
           {isAdmin && isClosed && (
-            <form onSubmit={handleInvite} className="mt-5 pt-4 border-t border-gray-700">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+            <form onSubmit={handleInvite} className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                 Kutsu käyttäjä
               </label>
               <div className="flex gap-2">
@@ -476,7 +476,7 @@ export default function GroupDetail() {
                   value={inviteUsername}
                   onChange={(e) => setInviteUsername(e.target.value)}
                   placeholder="Käyttäjänimi"
-                  className="flex-1 min-w-0 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500"
+                  className="flex-1 min-w-0 px-3 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
                 />
                 <button
                   type="submit"
@@ -487,19 +487,19 @@ export default function GroupDetail() {
                 </button>
               </div>
               {inviteError && (
-                <p className="mt-2 text-xs text-red-300">{inviteError}</p>
+                <p className="mt-2 text-xs text-red-700 dark:text-red-300">{inviteError}</p>
               )}
               {inviteSuccess && (
-                <p className="mt-2 text-xs text-emerald-400">{inviteSuccess}</p>
+                <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">{inviteSuccess}</p>
               )}
             </form>
           )}
         </div>
 
         {/* Elokuvat */}
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-5">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
           <h3 className="font-bold text-lg mb-4">Ryhmän elokuvat</h3>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Ei vielä elokuvia tässä ryhmässä.
           </p>
         </div>
@@ -513,16 +513,16 @@ export default function GroupDetail() {
             if (e.target === e.currentTarget && !leaving) closeLeaveModal()
           }}
         >
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
             <h2 className="text-lg font-bold mb-2">Poistu ryhmästä?</h2>
 
             {isOnlyMember ? (
-              <p className="text-sm text-gray-300 mb-5">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-5">
                 Olet ryhmän <strong>{group.name}</strong> ainoa jäsen. Jos
                 poistut, ryhmä poistetaan pysyvästi.
               </p>
             ) : (
-              <p className="text-sm text-gray-300 mb-5">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-5">
                 Haluatko varmasti poistua ryhmästä{' '}
                 <strong>{group.name}</strong>?
                 {isClosed && ' Takaisin pääset vain uudella kutsulla.'}
@@ -530,14 +530,14 @@ export default function GroupDetail() {
             )}
 
             {isLastAdminWithOthers && (
-              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl">
+              <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs rounded-xl">
                 Olet ryhmän ainoa ylläpitäjä. Nimeä ensin toinen ylläpitäjä
                 jäsenlistasta, jotta voit poistua.
               </div>
             )}
 
             {leaveError && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 text-xs rounded-xl">
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-700 dark:text-red-300 text-xs rounded-xl">
                 {leaveError}
               </div>
             )}
@@ -547,7 +547,7 @@ export default function GroupDetail() {
                 type="button"
                 onClick={closeLeaveModal}
                 disabled={leaving}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer disabled:opacity-50"
               >
                 Peruuta
               </button>

@@ -34,6 +34,9 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
         onGroupCreated(response.data)
       }
 
+      // Kerrotaan sivupalkille, että ryhmälista on muuttunut
+      window.dispatchEvent(new Event('groups-changed'))
+
       // Tyhjennetään kentät ja suljetaan modaali
       setName('')
       setDescription('')
@@ -49,27 +52,27 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-md text-white shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 w-full max-w-md text-gray-900 dark:text-white shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Luo uusi ryhmä</h2>
           <button 
             onClick={onClose}
             type="button"
-            className="text-gray-400 hover:text-white text-lg font-bold px-2 cursor-pointer"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
           >
             ✕
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-300 text-xs rounded-xl">
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-700 dark:text-red-300 text-xs rounded-xl">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
               Ryhmän nimi
             </label>
             <input 
@@ -78,12 +81,12 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Esim. Sunnuntain scifi-illat"
               required
-              className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
+              className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
               Kuvaus
             </label>
             <textarea 
@@ -91,21 +94,21 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Kerro lyhyesti mitä ryhmässä tehdään..."
               rows="3"
-              className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
               Ryhmän tyyppi
             </label>
             <select 
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
               <option value="public">Julkinen (kaikki voivat liittyä suoraan)</option>
-              <option value="closed">Suljettu (vaatii liittymispyynnön)</option>
+              <option value="closed">Suljettu (liittyminen vain kutsulla)</option>
             </select>
           </div>
 
@@ -114,7 +117,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-700 hover:bg-gray-600 transition cursor-pointer"
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition cursor-pointer"
             >
               Peruuta
             </button>

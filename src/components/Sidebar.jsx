@@ -52,7 +52,7 @@ export default function Sidebar({ onOpenAuth }) {
         className="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition group cursor-pointer"
       >
         {!collapsed && (
-          <h1 className="text-lg font-bold tracking-wider text-gray-900 dark:text-white group-hover:text-indigo-400 transition">
+          <h1 className="text-lg font-bold tracking-wider text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
             apple_master
           </h1>
         )}
@@ -100,7 +100,7 @@ export default function Sidebar({ onOpenAuth }) {
 
           {/* Omat ryhmät -lista suoraan pääpainikkeen alla (näytetään vain jos sivupalkki ei ole piilotettu) */}
           {!collapsed && (
-            <div className="pl-2 space-y-1 border-l border-gray-800 ml-3 my-2">
+            <div className="pl-2 space-y-1 border-l border-gray-200 dark:border-gray-800 ml-3 my-2">
               {myGroups.length > 0 ? (
                 myGroups.map((group) => {
                   const isGroupActive = location.pathname === `/groups/${group.id}`
@@ -111,12 +111,12 @@ export default function Sidebar({ onOpenAuth }) {
                       to={`/groups/${group.id}`}
                       className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs md:text-sm transition group ${
                         isGroupActive 
-                          ? 'bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30' 
-                          : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                          ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-500/30' 
+                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 transition ${
-                        isGroupActive ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 group-hover:bg-gray-700'
+                        isGroupActive ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-300 dark:group-hover:bg-gray-700'
                       }`}>
                         {group.name ? group.name.charAt(0).toUpperCase() : '?'}
                       </div>
