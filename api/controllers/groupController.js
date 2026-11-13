@@ -19,35 +19,49 @@ export const getMyGroups = async (req, res, next) => {
   }
 }
 
-// Lähetä käyttäjälle kutsu suljettuun ryhmään
 export const inviteUserToClosedGroup = async (req, res, next) => {
   try {
-    const adminId = req.user.id
-    const groupId = Number(req.params.groupId)
-    const invitedUserId = Number(req.body.userId)
+    const rawGroupId = req.params.groupId
+    const rawUserId = req.body.userId
 
-    // Tarkistetaan ryhmän tunnus
-    if (!Number.isInteger(groupId) || groupId <= 0) {
+    const groupId = Number(rawGroupId)
+    const invitedUserId = Number(rawUserId)
+    const currentUserId = Number(req.user.id)
+
+    // Validoi ryhmän tunnus ennen tietokantakyselyitä
+    if (
+      rawGroupId === undefined ||
+      rawGroupId === null ||
+      rawGroupId === '' ||
+      !Number.isInteger(groupId) ||
+      groupId <= 0
+    ) {
       return res.status(400).json({
         message: 'Virheellinen ryhmän tunnus'
       })
     }
 
-    // Tarkistetaan kutsuttavan käyttäjän tunnus
-    if (!Number.isInteger(invitedUserId) || invitedUserId <= 0) {
+    // Validoi kutsuttavan käyttäjän tunnus ennen tietokantakyselyitä
+    if (
+      rawUserId === undefined ||
+      rawUserId === null ||
+      rawUserId === '' ||
+      !Number.isInteger(invitedUserId) ||
+      invitedUserId <= 0
+    ) {
       return res.status(400).json({
         message: 'Virheellinen käyttäjän tunnus'
       })
     }
 
-    // Käyttäjä ei voi kutsua itseään
-    if (adminId === invitedUserId) {
+    // Ylläpitäjä ei voi kutsua itseään
+    if (invitedUserId === currentUserId) {
       return res.status(400).json({
         message: 'Et voi kutsua itseäsi ryhmään'
       })
     }
 
-    // Haetaan ryhmä
+    // 1. Tarkista, että ryhmä on olemassa
     const groupResult = await pool.query(
       `SELECT id, type
        FROM groups
@@ -70,7 +84,8 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       })
     }
 
-    // Tarkistetaan, että kutsun lähettäjä on ryhmän aktiivinen ylläpitäjä
+    // 2. Tarkista, että kirjautunut käyttäjä on juuri tämän ryhmän
+    // aktiivinen ylläpitäjä
     const adminResult = await pool.query(
       `SELECT id
        FROM group_members
@@ -78,7 +93,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, adminId]
+      [groupId, currentUserId]
     )
 
     if (adminResult.rows.length === 0) {
@@ -87,7 +102,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       })
     }
 
-    // Tarkistetaan, että kutsuttava käyttäjä on olemassa
+    // 3. Tarkista, että kutsuttava käyttäjä on olemassa
     const userResult = await pool.query(
       `SELECT id
        FROM users
@@ -101,8 +116,8 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       })
     }
 
-    // Tarkistetaan mahdollinen olemassa oleva jäsenyys tai kutsu
-    const existingMembershipResult = await pool.query(
+    // 4. Tarkista kutsuttavan nykyinen jäsenyys tai kutsu
+    const membershipResult = await pool.query(
       `SELECT id, role, status
        FROM group_members
        WHERE group_id = $1
@@ -110,22 +125,24 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       [groupId, invitedUserId]
     )
 
-    if (existingMembershipResult.rows.length > 0) {
-      const existingMembership = existingMembershipResult.rows[0]
+    if (membershipResult.rows.length > 0) {
+      const membership = membershipResult.rows[0]
 
-      if (existingMembership.status === 'active') {
+      if (membership.status === 'active') {
         return res.status(409).json({
           message: 'Käyttäjä on jo ryhmän jäsen'
         })
       }
 
-      return res.status(409).json({
-        message: 'Käyttäjällä on jo odottava kutsu tai jäsenyyspyyntö'
-      })
+      if (membership.status === 'pending') {
+        return res.status(409).json({
+          message: 'Käyttäjällä on jo odottava kutsu tai jäsenyyspyyntö'
+        })
+      }
     }
 
-    // Luodaan odottava kutsu
-    const result = await pool.query(
+    // 5. Luo uusi pending-kutsu member-roolilla
+    const invitationResult = await pool.query(
       `INSERT INTO group_members (
          group_id,
          user_id,
@@ -137,11 +154,11 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       [groupId, invitedUserId]
     )
 
-    res.status(201).json({
+    return res.status(201).json({
       message: 'Ryhmäkutsu lähetettiin onnistuneesti',
-      invitation: result.rows[0]
+      invitation: invitationResult.rows[0]
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 }
