@@ -131,6 +131,8 @@ Käyttöliittymä toteutetaan yksisivuisena sovelluksena (Single Page Applicatio
 - **Kuvanlataus ja CDN-integraatio:**
   - Postereita ei ladata omalle palvelimelle, vaan selaimelle muodostetaan kuvaosoitteet TMDB:n CDN-pohjaosoitteen ja kantaan
 
+### Käyttöliittymäsuunnitelma
+![Kaavio](KäyttöliittymäMalli.drawio.svg)
 ---
 
 ## 5. Rajapinnat (API:t) ja Integraatiot
