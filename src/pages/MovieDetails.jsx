@@ -18,7 +18,6 @@ export default function MovieDetails() {
 
       try {
         // Pyydetään backendiltä kyseisen elokuvan tiedot ID:n perusteella
-        // Varmista että reitti on tismalleen tämä (/api/movies/:id)
         const response = await axios.get(`/api/movies/${id}`)
         console.log('Elokuvan tiedot:', response.data)
         setMovie(response.data)
