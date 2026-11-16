@@ -1,539 +1,105 @@
-# Docker Full-Stack Example
+# Apple Master
 
-This project is a beginner-friendly example of running a full-stack application with **Docker Compose**.
+Apple Master is a community movie application for discovering films, sharing recommendations, and coordinating movie watching with friends and groups.
 
-It contains three services:
+## Description
 
-- **Frontend** — React + Vite
-- **Backend** — Node.js + Express
-- **Database** — PostgreSQL
+Apple Master combines a React and Vite frontend with an Express and Node.js backend and a PostgreSQL database. Users can search for movies through TMDB, view movie details, create and browse groups, maintain shared movie lists, and write ratings and reviews. The application can be started as a complete development environment with Docker Compose.
 
-```text
-Browser
-   │
-   ▼
-Frontend :5173
-   │
-   ▼
-Backend :3000
-   │
-   ▼
-PostgreSQL :5432
-```
+## Getting Started
 
-Docker Compose starts and connects all three services.
+### Dependencies
 
----
-
-## Requirements
-
-Install:
-
+- Docker Desktop with Docker Compose
+- Node.js 24.x and npm (for running the application without Docker)
+- A TMDB API key
 - Git
-- Docker Desktop
 
-### Important: start Docker Desktop
+### Installing
 
-Docker Desktop must be running before you use Docker commands.
-
-You can check it with:
+Clone the repository and enter the project directory:
 
 ```bash
-docker version
+git clone https://github.com/HenriEkorre/apple_master.git
+cd apple_master
 ```
 
-You should see information about both **Client** and **Server**.
-
-If Windows shows an error similar to:
-
-```text
-open //./pipe/dockerDesktopLinuxEngine:
-The system cannot find the file specified.
-```
-
-start Docker Desktop and wait until Docker is running.
-
----
-
-## Get the project
-
-If you only want to try the Docker example, you can clone the repository normally:
-
-```bash
-git clone https://github.com/OAMK-advanced-web-applications-project/docker_sample.git
-cd docker_sample
-```
-
-### Using the example as a starting point for your own project
-
-If you use this example as the starting point for your **own course project**, you should create your own Git repository.
-
-If you simply clone this repository, Git still remembers the original repository as its remote (`origin`). Instead, clone the example, remove its Git history, and initialize a new repository for your own project.
-
-First clone the example:
-
-```bash
-git clone https://github.com/OAMK-advanced-web-applications-project/docker_sample.git
-cd docker_sample
-```
-
-You can also rename the project directory to match your own project.
-
-Then remove the existing `.git` directory.
-
-### Windows PowerShell
-
-```powershell
-Remove-Item -Recurse -Force .git
-```
-
-### Windows Command Prompt
-
-```cmd
-rmdir /s /q .git
-```
-
-### Linux/macOS
-
-```bash
-rm -rf .git
-```
-
-> **Be careful:** make sure you are inside the correct project directory before removing `.git`.
-
-The project files are still there, but the connection to the original Git repository and its Git history have now been removed.
-
-Initialize a new Git repository:
-
-```bash
-git init
-git add .
-git commit -m "Initial project"
-```
-
-Create a new empty repository for your project on GitHub.
-
-Then connect your local project to your new GitHub repository:
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-git branch -M main
-git push -u origin main
-```
-
-Replace `YOUR_USERNAME` and `YOUR_REPOSITORY` with your own GitHub username and repository name.
-
-You can verify the configured remote with:
-
-```bash
-git remote -v
-```
-
-It should now show **your own repository**, not the original `docker_sample` repository.
-
-### Alternative: fork the repository
-
-Another possibility is to **fork** this repository on GitHub and then clone your fork.
-
-A fork keeps the Git history and the relationship to the original repository. This can be useful when you want to continue following changes made to the original project.
-
-For this course project, creating a fresh Git repository using the instructions above is usually simpler.
-
----
-
-## Create `.env`
-
-The repository contains:
-
-```text
-.env.example
-```
-
-Create your own `.env` file from it.
-
-### Option 1: File Explorer
-
-This may be easiest if you are not comfortable using the terminal.
-
-1. Open the project folder in File Explorer.
-2. Make a copy of `.env.example`.
-3. Rename the copy to:
-
-```text
-.env
-```
-
-Make sure the file is really named `.env` and not something like:
-
-```text
-.env.txt
-```
-
-### Option 2: Windows PowerShell
-
-```powershell
-Copy-Item .env.example .env
-```
-
-### Option 3: Windows Command Prompt
-
-```cmd
-copy .env.example .env
-```
-
-### Option 4: Linux/macOS
+Create a local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-The project should now contain both:
+Add your TMDB API key to `.env`:
 
 ```text
-.env.example
-.env
+TMDB_API_KEY=your_tmdb_api_key
 ```
 
-`.env.example` is stored in Git as an example configuration.
+Do not commit `.env` or expose API keys and JWT secrets in source control.
 
-`.env` is your local configuration file and should **not** be committed to Git.
+### Executing program
 
----
+#### Docker Compose
 
-## Start the application
-
-Make sure Docker Desktop is running.
-
-Then run:
+1. Start Docker Desktop.
+2. Build and start the frontend, backend, and PostgreSQL services:
 
 ```bash
 docker compose up --build
 ```
 
-The first start may take some time because Docker needs to download images and install dependencies.
+3. Open the application at [http://localhost:5173](http://localhost:5173).
+4. Check the backend and database connection at [http://localhost:3000/api/health](http://localhost:3000/api/health).
 
-When the services have started, open:
-
-```text
-Frontend: http://localhost:5173
-Backend:  http://localhost:3000
-Health:   http://localhost:3000/api/health
-```
-
-### Production HTTPS
-
-In production, terminate TLS at a trusted reverse proxy and forward traffic to
-the backend. Set `NODE_ENV=production` and configure `APP_ORIGIN` with an
-`https://` URL. The backend redirects HTTP requests to HTTPS and must not be
-exposed directly to the public internet without the TLS proxy.
-
----
-
-## Check container status
-
-Open another terminal in the project directory and run:
-
-```bash
-docker compose ps
-```
-
-You should see three services:
-
-```text
-frontend
-backend
-database
-```
-
-The `backend` and `database` services should eventually show as healthy.
-
----
-
-## How the containers communicate
-
-The backend connects to PostgreSQL using:
-
-```text
-database:5432
-```
-
-not:
-
-```text
-localhost:5432
-```
-
-Inside Docker Compose, the service name `database` acts as the hostname.
-
-From your own computer, PostgreSQL is available at:
-
-```text
-localhost:5432
-```
-
-For example, pgAdmin can use:
-
-```text
-Host: localhost
-Port: 5432
-Database: mydb
-Username: postgres
-Password: root
-```
-
----
-
-## Stop the application
-
-Stop and remove the containers:
+To stop the services:
 
 ```bash
 docker compose down
 ```
 
-The PostgreSQL data remains stored in a Docker volume.
+#### Local development
 
-To also delete the database volume:
-
-```bash
-docker compose down -v
-```
-
-Be careful: `-v` deletes the database data.
-
----
-
-## View logs
-
-All services:
+1. Install the dependencies:
 
 ```bash
-docker compose logs
+npm ci
 ```
 
-Backend:
+2. Start PostgreSQL and configure the database values in `.env`.
+3. Start the backend in one terminal:
 
 ```bash
-docker compose logs backend
+npm run dev:api
 ```
 
-Database:
+4. Start the frontend in another terminal:
 
 ```bash
-docker compose logs database
+npm run dev:web
 ```
 
-Follow logs continuously:
+The frontend is available at [http://localhost:5173](http://localhost:5173), and the backend runs on port `3000`.
 
-```bash
-docker compose logs -f
-```
+## Help
 
----
-
-## Common problems
-
-### Docker cannot connect
-
-Make sure Docker Desktop is running.
-
-Check:
-
-```bash
-docker version
-```
-
-You should see both Client and Server information.
-
----
-
-### A service does not start
-
-Check the status of the services:
+If a service does not start, inspect its status and logs:
 
 ```bash
 docker compose ps
-```
-
-Then inspect the logs:
-
-```bash
-docker compose logs
-```
-
-For example:
-
-```bash
 docker compose logs backend
-```
-
-or:
-
-```bash
 docker compose logs database
 ```
 
----
-
-### PostgreSQL port 5432 is already in use
-
-If you already have PostgreSQL installed on your computer, it may already be using port `5432`.
-
-Docker cannot use the same host port at the same time.
-
-You have three options.
-
-#### Option 1: Stop PostgreSQL using Windows Services
-
-1. Open the Start menu.
-2. Search for **Services**.
-3. Open the **Services** application.
-4. Look for a PostgreSQL service, for example:
-
-```text
-postgresql-x64-17
-postgresql-x64-18
-```
-
-The exact name depends on the installed PostgreSQL version.
-
-5. Right-click the PostgreSQL service.
-6. Select **Stop**.
-
-After that, start the Docker application again:
-
-```bash
-docker compose up
-```
-
-You can start your local PostgreSQL service again later from the same Services application.
-
-#### Option 2: Stop PostgreSQL from the terminal
-
-First, find the PostgreSQL service name.
-
-In PowerShell:
-
-```powershell
-Get-Service *postgres*
-```
-
-You should see something similar to:
-
-```text
-Status   Name                DisplayName
-------   ----                -----------
-Running  postgresql-x64-18   postgresql-x64-18
-```
-
-Then stop the service:
-
-```powershell
-Stop-Service postgresql-x64-18
-```
-
-Replace `postgresql-x64-18` with the actual service name shown on your computer.
-
-If PowerShell reports a permission error, open **PowerShell as Administrator** and try again.
-
-You can start PostgreSQL again later with:
-
-```powershell
-Start-Service postgresql-x64-18
-```
-
-Alternatively, from an **Administrator Command Prompt** you can use:
-
-```cmd
-net stop postgresql-x64-18
-```
-
-and start it again with:
-
-```cmd
-net start postgresql-x64-18
-```
-
-#### Option 3: Use another host port
-
-Instead of stopping your locally installed PostgreSQL, change this in `.env`:
-
-```env
-DB_EXPOSED_PORT=5432
-```
-
-to:
-
-```env
-DB_EXPOSED_PORT=5433
-```
-
-Then restart the Docker application:
-
-```bash
-docker compose down
-docker compose up
-```
-
-PostgreSQL inside Docker still listens on port:
-
-```text
-5432
-```
-
-but from your computer you now connect to:
-
-```text
-localhost:5433
-```
-
-For example, pgAdmin would use:
-
-```text
-Host: localhost
-Port: 5433
-Database: mydb
-Username: postgres
-Password: root
-```
-
-The backend does **not** need to change.
-
-It still connects to:
-
-```text
-database:5432
-```
-
-because the containers communicate through Docker's internal network.
-
----
-
-### I changed `init.sql`, but nothing changed
-
-`init.sql` is normally executed only when PostgreSQL creates a new database volume.
-
-To create a fresh database:
+If port `5432` is already in use, stop the local PostgreSQL service or change `DB_EXPOSED_PORT` in `.env`. To reset the Docker database, including all stored data, run:
 
 ```bash
 docker compose down -v
-docker compose up
 ```
 
-**Warning:** this deletes the existing Docker database data.
+For development checks, run:
 
----
-
-## Basic Docker concepts used in this example
-
-- **Dockerfile** — instructions for building an image
-- **Image** — template used to create containers
-- **Container** — running application environment
-- **Docker Compose** — manages multiple containers
-- **Port mapping** — exposes a container service to your computer
-- **Volume** — stores persistent data
-- **Bind mount** — makes local source files available inside a container
-- **Healthcheck** — checks whether a service is ready
-- **Service name** — allows containers to find each other, for example `database`
-
-More detailed explanations and exercises are provided separately in the course material.
+```bash
+npm run test
+npm run lint
+```
