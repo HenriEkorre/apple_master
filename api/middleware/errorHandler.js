@@ -3,8 +3,8 @@ const errorHandler = (err, req, res, _next) => {
   res.status(statusCode).json({
     error: {
       message: err.message,
-      status: statusCode
-    }
+      status: statusCode,
+    },
   })
 }
 

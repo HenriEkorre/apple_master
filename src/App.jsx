@@ -1,57 +1,50 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
 import './App.css'
+import { Routes, Route } from 'react-router-dom'
+import Sidebar from './components/Sidebar'
+import MobileNav from './components/MobileNav'
+import Home from './pages/Home'
+import Search from './pages/Search'
+import Header from './components/Header'
+import MovieDetails from './pages/MovieDetails'
+import Groups from './pages/Groups'
+import GroupDetail from './pages/GroupDetail'
+import BrowseGroups from './pages/BrowseGroups'
+import Test from './pages/Test'
+import ProtectedRoute from './components/ProtectedRoute'
+import AuthOverlay from './components/AuthOverlay'
+import { useState } from 'react'
 
 function App() {
-  const [data, setData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  const fetchData = async () => {
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const response = await axios.get('/api/tests')
-      setData(response.data)
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
+  const [authOpen, setAuthOpen] = useState(false)
 
   return (
-    <>
-      <h1>Docker Sample</h1>
-      <div className="card">
-        {loading && <p>Loading...</p>}
-        
-        {data && (
-          <div style={{ marginTop: '20px', padding: '10px', background: '#f0f0f0' }}>
-            <h3>Data from Backend:</h3>
-            <ul style={{ textAlign: 'left', margin: '10px 0' }}>
-              { data.map((item) => (
-                <li key={item.id} style={{ marginBottom: '10px' }}>
-                  {`ID: ${item.id} - ${item.description}`}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        
-        {error && (
-          <div style={{ marginTop: '20px', padding: '10px', background: '#ffebee', color: 'red' }}>
-            <h3>Error:</h3>
-            <p>{error}</p>
-          </div>
-        )}
+    <div className="flex h-[100dvh] overflow-hidden bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">
+      <Sidebar onOpenAuth={() => setAuthOpen(true)} />
+      <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+        <Header />
+        <main className="p-6">
+          {/* Routes */}
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/movie/:id" element={<MovieDetails />} />
+            <Route path="/groups" element={<Groups/>} />
+            <Route path="/groups/:id" element={<GroupDetail />} />
+            <Route path="/groups/browse" element={<BrowseGroups />} />
+            <Route
+              path="/test"
+              element={
+                <ProtectedRoute>
+                  <Test />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </main>
       </div>
-    </>
+      <MobileNav onOpenAuth={() => setAuthOpen(true)} />
+      {authOpen && <AuthOverlay onClose={() => setAuthOpen(false)} />}
+    </div>
   )
 }
 
