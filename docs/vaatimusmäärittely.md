@@ -41,7 +41,49 @@ Kaveriporukoille ja elokuvaharrastajille elokuvat ovat yhteinen harrastus, mutta
 
 ---
 
-## 4. Toiminnalliset vaatimukset
+## 4. Käyttötapauskaavio
+
+```mermaid
+graph TD
+    Visitor[Kirjautumaton kavijä]
+    User[Rekisteroitynyt käyttajä]
+    Admin[Ryhmän yllapitäjä]
+
+    Visitor --> User
+    User --> Admin
+
+    subgraph Elokuvasovellus
+        direction TB
+        Search[Selaa elokuvia ja teatteriesityksiä]
+        ViewPublic[Tarkastele julkisia listoja]
+        ManageLists[Luo omia toivelistoja]
+        GroupChat[Keskustele ryhmien chatissa]
+        ManageGroups[Luo ryhmiä ja hae ryhmiin]
+        ParticipateGroup[Osallistu ryhmän listoille]
+        ReviewMovie[Anna tähtiä ja arvostelu]
+        ManageOwnMembership[Poistu ryhmästä]
+        AdminActions[Kutsu ihmisiä ryhmään tai poista ryhmästä]
+        AdminContent[Muokkaa ryhmän listoja]
+        AdminRights[Jaa ylläpitäjaoikeuksia]
+    end
+
+    Visitor --> Search
+    Visitor --> ViewPublic
+    User --> Search
+    User --> ViewPublic
+    User --> GroupChat
+    User --> ManageLists
+    User --> ManageGroups
+    User --> ParticipateGroup
+    User --> ReviewMovie
+    User --> ManageOwnMembership
+    Admin --> AdminActions
+    Admin --> AdminContent
+    Admin --> AdminRights
+```
+---
+
+## 5. Toiminnalliset vaatimukset
 
 | ID | Vaatimus | Prioriteetti |
 |---|---|---|
@@ -71,7 +113,7 @@ Kaveriporukoille ja elokuvaharrastajille elokuvat ovat yhteinen harrastus, mutta
 
 ---
 
-## 5. Ei-toiminnalliset vaatimukset
+## 6. Ei-toiminnalliset vaatimukset
 
 | ID | Vaatimus | Todentaminen |
 |---|---|---|
@@ -84,7 +126,7 @@ Kaveriporukoille ja elokuvaharrastajille elokuvat ovat yhteinen harrastus, mutta
 
 ---
 
-## 6. Tiedot ja alustava tietomalli
+## 7. Tiedot ja alustava tietomalli
 
 Sovellus tallentaa ja käsittelee vähintään seuraavat pääentiteetit:
 
@@ -95,7 +137,7 @@ Sovellus tallentaa ja käsittelee vähintään seuraavat pääentiteetit:
 
 ---
 
-## 7. Projektin rajaus
+## 8. Projektin rajaus
 
 **Ensimmäiseen julkaisuun (MVP) sisältyvät:**
 - TMDB API -haku monipuolisilla suodattimilla (esim. vuosikymmen, näyttelijät).
