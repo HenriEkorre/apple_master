@@ -323,3 +323,397 @@ export const deleteList = async (req, res, next) => {
     next(error)
   }
 }
+
+// Luo uusi lista ryhmälle
+export const createGroupList = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const groupId = parseId(req.params.groupId)
+    const { title } = req.body
+
+    if (!groupId) {
+      return res.status(400).json({
+        message: 'Virheellinen ryhmän tunnus'
+      })
+    }
+
+    if (typeof title !== 'string') {
+      return res.status(400).json({
+        message: 'Listan nimi on pakollinen'
+      })
+    }
+
+    const trimmedTitle = title.trim()
+
+    if (!trimmedTitle) {
+      return res.status(400).json({
+        message: 'Listan nimi ei voi olla tyhjä'
+      })
+    }
+
+    if (trimmedTitle.length > MAX_TITLE_LENGTH) {
+      return res.status(400).json({
+        message: `Listan nimi voi olla enintään ${MAX_TITLE_LENGTH} merkkiä`,
+      })
+    }
+
+    const groupResult = await pool.query(
+      `SELECT id
+      FROM groups
+      WHERE id = $1`,
+      [groupId]
+    )
+
+    if (groupResult.rows.length === 0) {
+      return res.status(404).json({
+       message: 'Ryhmää ei löytynyt'
+      })
+    }
+
+    const adminResult = await pool.query(
+      `SELECT 1
+       FROM group_members
+       WHERE group_id = $1
+         AND user_id = $2
+         AND role = 'admin'
+         AND status = 'active'`,
+      [groupId, userId]
+    )
+
+    if (adminResult.rows.length === 0) {
+      return res.status(403).json({
+        message: 'Vain ryhmän ylläpitäjä voi luoda listoja'
+      })
+    }
+
+    const result = await pool.query(
+      `INSERT INTO lists (
+        title,
+        owner_type,
+        owner_id
+      )
+      VALUES (
+        $1,
+        'group',
+        $2
+      )
+      RETURNING *`,
+      [trimmedTitle, groupId]
+    )
+
+    res.status(201).json({
+      ...result.rows[0],
+      movie_count: 0
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Lisää elokuva ryhmän listalle
+export const addMovieToGroupList = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const listId = parseId(req.params.id)
+    const tmdbMovieId = parseId(req.body.tmdbMovieId)
+
+    if (!listId) {
+      return res.status(400).json({
+        message: 'Virheellinen listan tunnus'
+      })
+    }
+
+    if (!tmdbMovieId) {
+      return res.status(400).json({
+        message: 'Virheellinen elokuvan tunnus'
+      })
+    }
+
+    const listResult = await pool.query(
+      `SELECT id, owner_id
+       FROM lists
+       WHERE id = $1
+         AND owner_type = 'group'`,
+      [listId]
+    )
+
+    if (listResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt'
+      })
+    }
+
+    const groupId = listResult.rows[0].owner_id
+
+    const adminResult = await pool.query(
+      `SELECT 1
+       FROM group_members
+       WHERE group_id = $1
+         AND user_id = $2
+         AND role = 'admin'
+         AND status = 'active'`,
+      [groupId, userId]
+    )
+
+    if (adminResult.rows.length === 0) {
+      return res.status(403).json({
+        message: 'Vain ryhmän ylläpitäjä voi lisätä elokuvia'
+      })
+    }
+
+    const countResult = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM list_movies WHERE list_id = $1',
+      [listId]
+    )
+
+    if (countResult.rows[0].count >= MAX_MOVIES_PER_LIST) {
+      return res.status(400).json({
+        message: `Listalla voi olla enintään ${MAX_MOVIES_PER_LIST} elokuvaa`
+      })
+    }
+
+    let movie
+
+    try {
+      movie = await fetchMovieSummary(tmdbMovieId)
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return res.status(404).json({
+          message: 'Elokuvaa ei löytynyt'
+        })
+      }
+
+      throw error
+    }
+
+    const insertResult = await pool.query(
+      `INSERT INTO list_movies (
+         list_id,
+         tmdb_movie_id,
+         added_by
+       )
+       VALUES ($1, $2, $3)
+       ON CONFLICT (list_id, tmdb_movie_id)
+       DO NOTHING
+       RETURNING id, added_at`,
+      [listId, tmdbMovieId, userId]
+    )
+
+    if (insertResult.rows.length === 0) {
+      return res.status(409).json({
+        message: 'Elokuva on jo listalla'
+      })
+    }
+
+    res.status(201).json({
+      movie,
+      added_at: insertResult.rows[0].added_at
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Poista elokuva ryhmän listalta
+export const removeMovieFromGroupList = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const listId = parseId(req.params.id)
+    const tmdbMovieId = parseId(req.params.tmdbMovieId)
+
+    if (!listId || !tmdbMovieId) {
+      return res.status(400).json({
+        message: 'Virheellinen tunnus'
+      })
+    }
+
+    const listResult = await pool.query(
+      `SELECT id, owner_id
+       FROM lists
+       WHERE id = $1
+         AND owner_type = 'group'`,
+      [listId]
+    )
+
+    if (listResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt'
+      })
+    }
+
+    const groupId = listResult.rows[0].owner_id
+
+    const adminResult = await pool.query(
+      `SELECT 1
+       FROM group_members
+       WHERE group_id = $1
+         AND user_id = $2
+         AND role = 'admin'
+         AND status = 'active'`,
+      [groupId, userId]
+    )
+
+    if (adminResult.rows.length === 0) {
+      return res.status(403).json({
+        message: 'Vain ryhmän ylläpitäjä voi poistaa elokuvia'
+      })
+    }
+
+    const result = await pool.query(
+      `DELETE FROM list_movies
+       WHERE list_id = $1
+         AND tmdb_movie_id = $2
+       RETURNING id`,
+      [listId, tmdbMovieId]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Elokuvaa ei löytynyt listalta'
+      })
+    }
+
+    res.status(200).json({
+      message: 'Elokuva poistettiin listalta'
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Vaihda ryhmän listan nimi
+export const updateGroupList = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const listId = parseId(req.params.id)
+    const { title } = req.body
+
+    if (!listId) {
+      return res.status(400).json({
+        message: 'Virheellinen listan tunnus'
+      })
+    }
+
+    if (typeof title !== 'string') {
+      return res.status(400).json({
+        message: 'Listan nimi on pakollinen'
+      })
+    }
+
+    const trimmedTitle = title.trim()
+
+    if (!trimmedTitle) {
+      return res.status(400).json({
+        message: 'Listan nimi ei voi olla tyhjä'
+      })
+    }
+
+    if (trimmedTitle.length > MAX_TITLE_LENGTH) {
+      return res.status(400).json({
+        message: `Listan nimi voi olla enintään ${MAX_TITLE_LENGTH} merkkiä`,
+      })
+    }
+
+    const listResult = await pool.query(
+      `SELECT id, owner_id
+       FROM lists
+       WHERE id = $1
+         AND owner_type = 'group'`,
+      [listId]
+    )
+
+    if (listResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt'
+      })
+    }
+
+    const groupId = listResult.rows[0].owner_id
+
+    const adminResult = await pool.query(
+      `SELECT 1
+       FROM group_members
+       WHERE group_id = $1
+         AND user_id = $2
+         AND role = 'admin'
+         AND status = 'active'`,
+      [groupId, userId]
+    )
+
+    if (adminResult.rows.length === 0) {
+      return res.status(403).json({
+        message: 'Vain ryhmän ylläpitäjä voi muokata listoja'
+      })
+    }
+
+    const result = await pool.query(
+      `UPDATE lists
+       SET title = $1
+       WHERE id = $2
+       RETURNING *`,
+      [trimmedTitle, listId]
+    )
+
+    res.status(200).json(result.rows[0])
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Poista koko ryhmän lista
+export const deleteGroupList = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const listId = parseId(req.params.id)
+
+    if (!listId) {
+      return res.status(400).json({
+        message: 'Virheellinen listan tunnus'
+      })
+    }
+
+    const listResult = await pool.query(
+      `SELECT id, owner_id
+       FROM lists
+       WHERE id = $1
+         AND owner_type = 'group'`,
+      [listId]
+    )
+
+    if (listResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt'
+      })
+    }
+
+    const groupId = listResult.rows[0].owner_id
+
+    const adminResult = await pool.query(
+      `SELECT 1
+       FROM group_members
+       WHERE group_id = $1
+         AND user_id = $2
+         AND role = 'admin'
+         AND status = 'active'`,
+      [groupId, userId]
+    )
+
+    if (adminResult.rows.length === 0) {
+      return res.status(403).json({
+        message: 'Vain ryhmän ylläpitäjä voi poistaa listoja'
+      })
+    }
+
+    await pool.query(
+      `DELETE FROM lists
+       WHERE id = $1`,
+      [listId]
+    )
+
+    res.status(200).json({
+      message: 'Lista poistettiin'
+    })
+  } catch (error) {
+    next(error)
+  }
+}
