@@ -38,10 +38,10 @@ export default function MobileNav({ onOpenAuth }) {
         </svg>
         <span className="mt-0.5 text-[10px]">Haku</span>
       </Link>
-      <Link
-        to="/favorites"
-        className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
-      >
+        <Link
+          to="/lists"
+          className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
+        >
         <svg
           className="size-5 fill-current"
           viewBox="0 0 24 24"
@@ -49,7 +49,7 @@ export default function MobileNav({ onOpenAuth }) {
         >
           <path d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0 1 15.5 4 4.5 4.5 0 0 1 20 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35Z" />
         </svg>
-        <span className="mt-0.5 text-[10px]">Suosikit</span>
+        <span className="mt-0.5 text-[10px]">Listat</span>
       </Link>
       <Link
         to="/groups"

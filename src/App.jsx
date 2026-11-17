@@ -12,6 +12,8 @@ import BrowseGroups from './pages/BrowseGroups'
 import Test from './pages/Test'
 import ProtectedRoute from './components/ProtectedRoute'
 import AuthOverlay from './components/AuthOverlay'
+import Lists from './pages/Lists'
+import ListDetail from './pages/ListDetail'
 import { useState } from 'react'
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
             <Route path="/groups" element={<Groups/>} />
             <Route path="/groups/:id" element={<GroupDetail />} />
             <Route path="/groups/browse" element={<BrowseGroups />} />
+            <Route path="/lists" element={<Lists />} />
+            <Route path="/lists/:id" element={<ListDetail />} />
             <Route
               path="/test"
               element={

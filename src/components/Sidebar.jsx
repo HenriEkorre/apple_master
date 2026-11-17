@@ -167,29 +167,11 @@ export default function Sidebar({ onOpenAuth }) {
           <ul className="space-y-1">
             <li>
               <Link
-                to="/favorites"
+                to="/lists"
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  isActive('/favorites') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  isActive('/lists') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
-                title="Suosikit"
-              >
-                <svg
-                  className="size-5 shrink-0 fill-current"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0 1 15.5 4 4.5 4.5 0 0 1 20 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35Z" />
-                </svg>
-                {!collapsed && <span>Suosikit</span>}
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/watchlist"
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  isActive('/watchlist') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                }`}
-                title="Katselulista"
+                title="Omat listat"
               >
                 <svg
                   className="size-5 shrink-0 fill-current"
@@ -198,7 +180,7 @@ export default function Sidebar({ onOpenAuth }) {
                 >
                   <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h6v-2H7Z" />
                 </svg>
-                {!collapsed && <span>Katselulista</span>}
+                {!collapsed && <span>Omat listat</span>}
               </Link>
             </li>
           </ul>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import MovieDetailsSkeleton from '../components/MovieDetailsSkeleton'
+import AddToListButton from '../components/AddToListButton'
 
 export default function MovieDetails() {
   // Nappaa elokuvan ID URL-osoitteesta 
@@ -107,6 +108,11 @@ export default function MovieDetails() {
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               {movie.overview || 'Ei juonikuvausta saatavilla.'}
             </p>
+          </div>
+
+          {/* Lisää listalle */}
+          <div className="mt-6">
+            <AddToListButton movieId={movie.id} />
           </div>
         </div>
       </div>
