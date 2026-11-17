@@ -17,3 +17,26 @@ export const getMyHistory = async (req, res, next) => {
     next(error)
   }
 }
+
+// Lisää elokuva katseluhistoriaan
+export const addToHistory = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const { movieId } = req.body
+
+    if (!movieId) {
+      return res.status(400).json({ error: "Movie ID is required" })
+    }
+
+    const result = await pool.query(
+      `INSERT INTO watch_history (user_id, movie_id) 
+       VALUES ($1, $2) 
+       RETURNING *`,
+      [userId, movieId]
+    )
+
+    res.status(201).json(result.rows[0])
+  } catch (error) {
+    next(error)
+  }
+}
