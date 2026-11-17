@@ -15,7 +15,7 @@ export default function BrowseGroups() {
     const fetchGroups = async () => {
       try {
         setLoading(true)
-        // Haetaan ryhmät backendistä (voit vaihtaa endpointin, kun teette yleisen ryhmien haun)
+        // Haetaan ryhmät backendistä 
         const response = await axios.get('/api/groups/browse', { withCredentials: true })
         setGroups(response.data)
       } catch (err) {
