@@ -19,6 +19,11 @@ export const getMyGroups = async (req, res, next) => {
        WHERE gm.user_id = $1 AND gm.status = 'active'`,
       [userId]
     )
+    // Ryhmille valmiit linkit profiilisivua varten
+    const groupsWithLinks = (result.rows || []).map((group) => ({
+      ...group,
+      link: `/groups/${group.id}`,
+    }))
 
     return res.status(200).json(result.rows || [])
   } catch (error) {
