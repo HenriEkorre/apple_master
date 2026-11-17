@@ -8,6 +8,9 @@ import authRouter from './routes/authRouter.js'
 import groupRouter from './routes/groupRouter.js'
 import cookieParser from 'cookie-parser'
 import listRouter from './routes/listRouter.js'
+import historyRouter from './routes/historyRouter.js'
+import reviewRouter from './routes/reviewRouter.js'
+import commentRouter from './routes/commentRouter.js'
 const app = express()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -59,6 +62,10 @@ app.use('/api/movies', movieRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/groups', groupRouter)
 app.use('/api/lists', listRouter)
+app.use('/api/history', historyRouter)
+app.use('/api/reviews', reviewRouter)
+app.use('/api/reviews', reviewRouter)
+app.use('/api/comments', commentRouter)
 
 // Health check endpoint for database connectivity
 app.get('/api/health', async (req, res) => {
