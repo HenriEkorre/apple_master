@@ -4,6 +4,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import errorHandler from './middleware/errorHandler.js'
 import movieRouter from './routes/movieRouter.js'
+import peopleRouter from './routes/peopleRouter.js'
 import authRouter from './routes/authRouter.js'
 import groupRouter from './routes/groupRouter.js'
 import cookieParser from 'cookie-parser'
@@ -59,6 +60,7 @@ app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
 
 app.use('/api/movies', movieRouter)
+app.use('/api/people', peopleRouter)
 app.use('/api/auth', authRouter)
 app.use('/api/groups', groupRouter)
 app.use('/api/lists', listRouter)

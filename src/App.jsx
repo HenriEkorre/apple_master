@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Search from './pages/Search'
 import Header from './components/Header'
 import MovieDetails from './pages/MovieDetails'
+import PersonDetails from './pages/PersonDetails'
 import Groups from './pages/Groups'
 import GroupDetail from './pages/GroupDetail'
 import BrowseGroups from './pages/BrowseGroups'
@@ -30,6 +31,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<Search />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
+            <Route path="/person/:id" element={<PersonDetails />} />
             <Route path="/groups" element={<Groups/>} />
             <Route path="/groups/:id" element={<GroupDetail />} />
             <Route path="/groups/browse" element={<BrowseGroups />} />
