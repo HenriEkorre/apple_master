@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { CloseIcon } from './Icons'
 
 export default function CreateListModal({ isOpen, onClose, onListCreated }) {
   const [title, setTitle] = useState('')
@@ -78,7 +79,7 @@ export default function CreateListModal({ isOpen, onClose, onListCreated }) {
             aria-label="Sulje"
             className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
           >
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

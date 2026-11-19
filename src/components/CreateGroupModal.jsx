@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { CloseIcon } from './Icons'
 
 export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
   const [name, setName] = useState('')
@@ -60,7 +61,7 @@ export default function CreateGroupModal({ isOpen, onClose, onGroupCreated }) {
             type="button"
             className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
           >
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

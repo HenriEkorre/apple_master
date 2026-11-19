@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import MovieCard from '../components/MovieCard'
+import { CloseIcon } from '../components/Icons'
 
 export default function ListDetail() {
   const { id } = useParams()
@@ -483,7 +484,7 @@ export default function ListDetail() {
                 aria-label={`Poista ${movie.title || 'elokuva'} listalta`}
                 className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg text-xs font-semibold bg-black/70 hover:bg-red-600 text-white transition cursor-pointer disabled:opacity-50"
               >
-                {removingId === movie.id ? '...' : '✕ Poista'}
+                {removingId === movie.id ? '...' : <><CloseIcon className="inline size-3.5 mr-1" /> Poista</>}
               </button>
             </div>
           ))}
