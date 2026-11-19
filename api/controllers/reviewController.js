@@ -27,7 +27,7 @@ export const createReview = async (req, res, next) => {
     const { rating, comment } = req.body
 
     if (!movieId || !rating) {
-      return res.status(400).json({ error: "Movie ID and rating are required" })
+      return res.status(400).json({ error: 'Movie ID and rating are required' })
     }
 
     const result = await pool.query(

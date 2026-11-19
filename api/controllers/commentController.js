@@ -27,7 +27,7 @@ export const createComment = async (req, res, next) => {
     const { content } = req.body
 
     if (!movieId || !content) {
-      return res.status(400).json({ error: "Movie ID and content are required" })
+      return res.status(400).json({ error: 'Movie ID and content are required' })
     }
 
     const result = await pool.query(

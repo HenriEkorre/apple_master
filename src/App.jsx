@@ -15,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import AuthOverlay from './components/AuthOverlay'
 import Lists from './pages/Lists'
 import ListDetail from './pages/ListDetail'
+import Profile from './pages/Profile'
 import { useState } from 'react'
 
 function App() {
@@ -32,11 +33,13 @@ function App() {
             <Route path="/search" element={<Search />} />
             <Route path="/movie/:id" element={<MovieDetails />} />
             <Route path="/person/:id" element={<PersonDetails />} />
-            <Route path="/groups" element={<Groups/>} />
+            <Route path="/groups" element={<Groups />} />
             <Route path="/groups/:id" element={<GroupDetail />} />
             <Route path="/groups/browse" element={<BrowseGroups />} />
             <Route path="/lists" element={<Lists />} />
             <Route path="/lists/:id" element={<ListDetail />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
             <Route
               path="/test"
               element={

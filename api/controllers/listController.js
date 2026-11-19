@@ -8,7 +8,9 @@ const MAX_MOVIES_PER_LIST = 50 // elokuvien tiedot haetaan TMDB:stä listaa avat
 // Palauttaa positiivisen kokonaisluvun tai null, jos arvo ei kelpaa
 const parseId = (value) => {
   const number = Number(value)
-  return Number.isInteger(number) && number > 0 && number <= MAX_INT ? number : null
+  return Number.isInteger(number) && number > 0 && number <= MAX_INT
+    ? number
+    : null
 }
 
 // Hae yksi elokuva TMDB:stä ja palauta vain tarvittavat kentät
@@ -18,7 +20,7 @@ const fetchMovieSummary = async (tmdbMovieId) => {
     {
       params: { api_key: process.env.TMDB_API_KEY, language: 'fi-FI' },
       timeout: 8000,
-    }
+    },
   )
   const movie = response.data
   return {
@@ -36,7 +38,7 @@ const fetchMovieSummaries = async (ids) => {
   return results.map((result, index) =>
     result.status === 'fulfilled'
       ? result.value
-      : { id: ids[index], title: null, unavailable: true }
+      : { id: ids[index], title: null, unavailable: true },
   )
 }
 
@@ -45,7 +47,7 @@ const findOwnedList = async (listId, userId) => {
   const result = await pool.query(
     `SELECT * FROM lists
      WHERE id = $1 AND owner_type = 'user' AND owner_id = $2`,
-    [listId, userId]
+    [listId, userId],
   )
   return result.rows[0] || null
 }
@@ -59,7 +61,9 @@ export const getMyLists = async (req, res, next) => {
     if (req.query.movieId !== undefined) {
       movieId = parseId(req.query.movieId)
       if (!movieId) {
-        return res.status(400).json({ message: 'Virheellinen elokuvan tunnus' })
+        return res
+          .status(400)
+          .json({ message: 'Virheellinen elokuvan tunnus' })
       }
     }
 
@@ -77,7 +81,7 @@ export const getMyLists = async (req, res, next) => {
        FROM lists l
        WHERE l.owner_type = 'user' AND l.owner_id = $1
        ORDER BY l.created_at ASC, l.id ASC`,
-      [userId, movieId]
+      [userId, movieId],
     )
 
     res.status(200).json(result.rows)
@@ -114,7 +118,7 @@ export const createList = async (req, res, next) => {
       `INSERT INTO lists (title, owner_type, owner_id)
        VALUES ($1, 'user', $2)
        RETURNING *`,
-      [trimmedTitle, userId]
+      [trimmedTitle, userId],
     )
 
     res.status(201).json({ ...result.rows[0], movie_count: 0 })
@@ -155,7 +159,7 @@ export const getListById = async (req, res, next) => {
           )
         )
       `,
-      [listId, userId]
+      [listId, userId],
     )
 
     const list = listResult.rows[0]
@@ -172,11 +176,11 @@ export const getListById = async (req, res, next) => {
        FROM list_movies
        WHERE list_id = $1
        ORDER BY added_at DESC, id DESC`,
-      [listId]
+      [listId],
     )
 
     const movies = await fetchMovieSummaries(
-      moviesResult.rows.map((row) => row.tmdb_movie_id)
+      moviesResult.rows.map((row) => row.tmdb_movie_id),
     )
 
     res.status(200).json({
@@ -210,7 +214,7 @@ export const addMovieToList = async (req, res, next) => {
     // Rajoitetaan listan koko
     const countResult = await pool.query(
       'SELECT COUNT(*)::int AS count FROM list_movies WHERE list_id = $1',
-      [listId]
+      [listId],
     )
     if (countResult.rows[0].count >= MAX_MOVIES_PER_LIST) {
       return res.status(400).json({
@@ -235,7 +239,7 @@ export const addMovieToList = async (req, res, next) => {
        VALUES ($1, $2, $3)
        ON CONFLICT (list_id, tmdb_movie_id) DO NOTHING
        RETURNING id, added_at`,
-      [listId, tmdbMovieId, userId]
+      [listId, tmdbMovieId, userId],
     )
 
     if (insertResult.rows.length === 0) {
@@ -269,7 +273,7 @@ export const removeMovieFromList = async (req, res, next) => {
          AND l.owner_id = $2
          AND lm.tmdb_movie_id = $3
        RETURNING lm.id`,
-      [listId, userId, tmdbMovieId]
+      [listId, userId, tmdbMovieId],
     )
 
     if (result.rows.length === 0) {
@@ -316,7 +320,7 @@ export const updateList = async (req, res, next) => {
       `UPDATE lists SET title = $1
        WHERE id = $2 AND owner_type = 'user' AND owner_id = $3
        RETURNING *`,
-      [trimmedTitle, listId, userId]
+      [trimmedTitle, listId, userId],
     )
 
     if (result.rows.length === 0) {
@@ -343,7 +347,7 @@ export const deleteList = async (req, res, next) => {
       `DELETE FROM lists
        WHERE id = $1 AND owner_type = 'user' AND owner_id = $2
        RETURNING id`,
-      [listId, userId]
+      [listId, userId],
     )
 
     if (result.rows.length === 0) {
@@ -365,13 +369,13 @@ export const createGroupList = async (req, res, next) => {
 
     if (!groupId) {
       return res.status(400).json({
-        message: 'Virheellinen ryhmän tunnus'
+        message: 'Virheellinen ryhmän tunnus',
       })
     }
 
     if (typeof title !== 'string') {
       return res.status(400).json({
-        message: 'Listan nimi on pakollinen'
+        message: 'Listan nimi on pakollinen',
       })
     }
 
@@ -379,7 +383,7 @@ export const createGroupList = async (req, res, next) => {
 
     if (!trimmedTitle) {
       return res.status(400).json({
-        message: 'Listan nimi ei voi olla tyhjä'
+        message: 'Listan nimi ei voi olla tyhjä',
       })
     }
 
@@ -393,12 +397,12 @@ export const createGroupList = async (req, res, next) => {
       `SELECT id
       FROM groups
       WHERE id = $1`,
-      [groupId]
+      [groupId],
     )
 
     if (groupResult.rows.length === 0) {
       return res.status(404).json({
-       message: 'Ryhmää ei löytynyt'
+        message: 'Ryhmää ei löytynyt',
       })
     }
 
@@ -409,12 +413,12 @@ export const createGroupList = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi luoda listoja'
+        message: 'Vain ryhmän ylläpitäjä voi luoda listoja',
       })
     }
 
@@ -430,12 +434,12 @@ export const createGroupList = async (req, res, next) => {
         $2
       )
       RETURNING *`,
-      [trimmedTitle, groupId]
+      [trimmedTitle, groupId],
     )
 
     res.status(201).json({
       ...result.rows[0],
-      movie_count: 0
+      movie_count: 0,
     })
   } catch (error) {
     next(error)
@@ -451,13 +455,13 @@ export const addMovieToGroupList = async (req, res, next) => {
 
     if (!listId) {
       return res.status(400).json({
-        message: 'Virheellinen listan tunnus'
+        message: 'Virheellinen listan tunnus',
       })
     }
 
     if (!tmdbMovieId) {
       return res.status(400).json({
-        message: 'Virheellinen elokuvan tunnus'
+        message: 'Virheellinen elokuvan tunnus',
       })
     }
 
@@ -466,12 +470,12 @@ export const addMovieToGroupList = async (req, res, next) => {
        FROM lists
        WHERE id = $1
          AND owner_type = 'group'`,
-      [listId]
+      [listId],
     )
 
     if (listResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Listaa ei löytynyt'
+        message: 'Listaa ei löytynyt',
       })
     }
 
@@ -484,23 +488,23 @@ export const addMovieToGroupList = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi lisätä elokuvia'
+        message: 'Vain ryhmän ylläpitäjä voi lisätä elokuvia',
       })
     }
 
     const countResult = await pool.query(
       'SELECT COUNT(*)::int AS count FROM list_movies WHERE list_id = $1',
-      [listId]
+      [listId],
     )
 
     if (countResult.rows[0].count >= MAX_MOVIES_PER_LIST) {
       return res.status(400).json({
-        message: `Listalla voi olla enintään ${MAX_MOVIES_PER_LIST} elokuvaa`
+        message: `Listalla voi olla enintään ${MAX_MOVIES_PER_LIST} elokuvaa`,
       })
     }
 
@@ -511,7 +515,7 @@ export const addMovieToGroupList = async (req, res, next) => {
     } catch (error) {
       if (error.response?.status === 404) {
         return res.status(404).json({
-          message: 'Elokuvaa ei löytynyt'
+          message: 'Elokuvaa ei löytynyt',
         })
       }
 
@@ -528,18 +532,18 @@ export const addMovieToGroupList = async (req, res, next) => {
        ON CONFLICT (list_id, tmdb_movie_id)
        DO NOTHING
        RETURNING id, added_at`,
-      [listId, tmdbMovieId, userId]
+      [listId, tmdbMovieId, userId],
     )
 
     if (insertResult.rows.length === 0) {
       return res.status(409).json({
-        message: 'Elokuva on jo listalla'
+        message: 'Elokuva on jo listalla',
       })
     }
 
     res.status(201).json({
       movie,
-      added_at: insertResult.rows[0].added_at
+      added_at: insertResult.rows[0].added_at,
     })
   } catch (error) {
     next(error)
@@ -555,7 +559,7 @@ export const removeMovieFromGroupList = async (req, res, next) => {
 
     if (!listId || !tmdbMovieId) {
       return res.status(400).json({
-        message: 'Virheellinen tunnus'
+        message: 'Virheellinen tunnus',
       })
     }
 
@@ -564,12 +568,12 @@ export const removeMovieFromGroupList = async (req, res, next) => {
        FROM lists
        WHERE id = $1
          AND owner_type = 'group'`,
-      [listId]
+      [listId],
     )
 
     if (listResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Listaa ei löytynyt'
+        message: 'Listaa ei löytynyt',
       })
     }
 
@@ -582,12 +586,12 @@ export const removeMovieFromGroupList = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi poistaa elokuvia'
+        message: 'Vain ryhmän ylläpitäjä voi poistaa elokuvia',
       })
     }
 
@@ -596,17 +600,17 @@ export const removeMovieFromGroupList = async (req, res, next) => {
        WHERE list_id = $1
          AND tmdb_movie_id = $2
        RETURNING id`,
-      [listId, tmdbMovieId]
+      [listId, tmdbMovieId],
     )
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: 'Elokuvaa ei löytynyt listalta'
+        message: 'Elokuvaa ei löytynyt listalta',
       })
     }
 
     res.status(200).json({
-      message: 'Elokuva poistettiin listalta'
+      message: 'Elokuva poistettiin listalta',
     })
   } catch (error) {
     next(error)
@@ -622,13 +626,13 @@ export const updateGroupList = async (req, res, next) => {
 
     if (!listId) {
       return res.status(400).json({
-        message: 'Virheellinen listan tunnus'
+        message: 'Virheellinen listan tunnus',
       })
     }
 
     if (typeof title !== 'string') {
       return res.status(400).json({
-        message: 'Listan nimi on pakollinen'
+        message: 'Listan nimi on pakollinen',
       })
     }
 
@@ -636,7 +640,7 @@ export const updateGroupList = async (req, res, next) => {
 
     if (!trimmedTitle) {
       return res.status(400).json({
-        message: 'Listan nimi ei voi olla tyhjä'
+        message: 'Listan nimi ei voi olla tyhjä',
       })
     }
 
@@ -651,12 +655,12 @@ export const updateGroupList = async (req, res, next) => {
        FROM lists
        WHERE id = $1
          AND owner_type = 'group'`,
-      [listId]
+      [listId],
     )
 
     if (listResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Listaa ei löytynyt'
+        message: 'Listaa ei löytynyt',
       })
     }
 
@@ -669,12 +673,12 @@ export const updateGroupList = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi muokata listoja'
+        message: 'Vain ryhmän ylläpitäjä voi muokata listoja',
       })
     }
 
@@ -683,7 +687,7 @@ export const updateGroupList = async (req, res, next) => {
        SET title = $1
        WHERE id = $2
        RETURNING *`,
-      [trimmedTitle, listId]
+      [trimmedTitle, listId],
     )
 
     res.status(200).json(result.rows[0])
@@ -700,7 +704,7 @@ export const deleteGroupList = async (req, res, next) => {
 
     if (!listId) {
       return res.status(400).json({
-        message: 'Virheellinen listan tunnus'
+        message: 'Virheellinen listan tunnus',
       })
     }
 
@@ -709,12 +713,12 @@ export const deleteGroupList = async (req, res, next) => {
        FROM lists
        WHERE id = $1
          AND owner_type = 'group'`,
-      [listId]
+      [listId],
     )
 
     if (listResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Listaa ei löytynyt'
+        message: 'Listaa ei löytynyt',
       })
     }
 
@@ -727,23 +731,23 @@ export const deleteGroupList = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi poistaa listoja'
+        message: 'Vain ryhmän ylläpitäjä voi poistaa listoja',
       })
     }
 
     await pool.query(
       `DELETE FROM lists
        WHERE id = $1`,
-      [listId]
+      [listId],
     )
 
     res.status(200).json({
-      message: 'Lista poistettiin'
+      message: 'Lista poistettiin',
     })
   } catch (error) {
     next(error)
@@ -775,7 +779,7 @@ export const getSharedLists = async (req, res, next) => {
         AND gm.status = 'active'
       ORDER BY l.created_at ASC, l.id ASC
       `,
-      [userId]
+      [userId],
     )
 
     res.status(200).json(result.rows)

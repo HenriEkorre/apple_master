@@ -45,13 +45,13 @@ export default function MovieCard({ movie }) {
             <div className="flex items-center justify-between text-gray-300">
               <span className="text-xs text-gray-900 dark:text-white">Kaikki:</span>
               <span className="font-semibold text-amber-400">
-                 {worldRating} / 10
+                {worldRating} / 10
               </span>
             </div>
             <div className="flex items-center justify-between text-gray-300">
               <span className="text-xs text-gray-900 dark:text-white">Kaverit:</span>
               <span className="font-semibold text-indigo-400">
-                 {friendsRating} / 5
+                {friendsRating} / 5
               </span>
             </div>
           </div>

@@ -12,6 +12,7 @@ import listRouter from './routes/listRouter.js'
 import historyRouter from './routes/historyRouter.js'
 import reviewRouter from './routes/reviewRouter.js'
 import commentRouter from './routes/commentRouter.js'
+import profileRouter from './routes/profileRouter.js'
 const app = express()
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,10 +33,9 @@ if (isProduction) {
   })
 }
 
-const allowedOrigins =
-  isProduction
-    ? [configuredOrigin]
-    : [configuredOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173']
+const allowedOrigins = isProduction
+  ? [configuredOrigin]
+  : [configuredOrigin, 'http://localhost:5173', 'http://127.0.0.1:5173']
 
 app.use((req, res, next) => {
   // Tarkista onko kyseessä tilaa muuttava pyyntö (POST, PUT, PATCH, DELETE)
@@ -68,6 +68,7 @@ app.use('/api/history', historyRouter)
 app.use('/api/reviews', reviewRouter)
 app.use('/api/reviews', reviewRouter)
 app.use('/api/comments', commentRouter)
+app.use('/api/profile', profileRouter)
 
 // Health check endpoint for database connectivity
 app.get('/api/health', async (req, res) => {

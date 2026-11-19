@@ -48,8 +48,8 @@ export default function Search() {
       // Ryhmähaku vaatii kirjautumisen
       const groupsRequest = user
         ? axios.get(`/api/groups/search?q=${encodeURIComponent(searchQuery)}`, {
-            withCredentials: true,
-          })
+          withCredentials: true,
+        })
         : Promise.resolve(null)
 
       const [movieResult, peopleResult, groupResult] = await Promise.allSettled([

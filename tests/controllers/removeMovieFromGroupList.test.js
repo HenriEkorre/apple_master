@@ -212,8 +212,8 @@ describe('removeMovieFromGroupList', () => {
 
     const adminQuery = queryMock.mock.calls[1][0]
 
-    expect(adminQuery).toContain("role = 'admin'")
-    expect(adminQuery).toContain("status = 'active'")
+    expect(adminQuery).toContain('role = \'admin\'')
+    expect(adminQuery).toContain('status = \'active\'')
 
     expect(res.status).toHaveBeenCalledWith(403)
   })
