@@ -1,6 +1,7 @@
 import express from 'express'
 import {
   getMyLists,
+  getSharedLists,
   createList,
   getListById,
   updateList,
@@ -18,6 +19,7 @@ import { protect } from '../middleware/authMiddleware.js'
 const router = express.Router()
 
 router.get('/my', protect, getMyLists)
+router.get('/shared', protect, getSharedLists)
 router.post('/', protect, createList)
 router.post('/groups/:groupId/lists', protect, createGroupList)
 router.patch('/groups/lists/:id', protect, updateGroupList)

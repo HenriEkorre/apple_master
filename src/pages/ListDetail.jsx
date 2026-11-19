@@ -150,7 +150,9 @@ export default function ListDetail() {
       setSavingTitle(true)
       setTitleError(null)
       const response = await axios.patch(
-        `/api/lists/${id}`,
+        list.owner_type === 'group'
+          ? `/api/lists/groups/lists/${id}`
+          : `/api/lists/${id}`,
         { title: trimmedTitle },
         { withCredentials: true },
       )
@@ -181,7 +183,12 @@ export default function ListDetail() {
     try {
       setDeleting(true)
       setDeleteError(null)
-      await axios.delete(`/api/lists/${id}`, { withCredentials: true })
+      const deleteUrl = list.owner_type === 'group'
+        ? `/api/lists/groups/lists/${id}`
+        : `/api/lists/${id}`
+      await axios.delete(deleteUrl, {
+        withCredentials: true,
+      })
       window.dispatchEvent(new Event('lists-changed'))
       navigate('/lists')
     } catch (err) {
@@ -199,7 +206,9 @@ export default function ListDetail() {
       setAddingId(movie.id)
       setSearchError(null)
       const response = await axios.post(
-        `/api/lists/${id}/movies`,
+        list.owner_type === 'group'
+          ? `/api/lists/groups/lists/${id}/movies`
+          : `/api/lists/${id}/movies`,
         { tmdbMovieId: movie.id },
         { withCredentials: true },
       )
@@ -224,7 +233,12 @@ export default function ListDetail() {
     try {
       setRemovingId(movie.id)
       setActionError(null)
-      await axios.delete(`/api/lists/${id}/movies/${movie.id}`, {
+      const removeUrl =
+        list.owner_type === 'group'
+          ? `/api/lists/groups/lists/${id}/movies/${movie.id}`
+          : `/api/lists/${id}/movies/${movie.id}`
+
+      await axios.delete(removeUrl, {
         withCredentials: true,
       })
       setList((prev) => ({

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../AuthProvider'
+import CreateGroupListModal from '../components/CreateGroupListModal'
 
 export default function GroupDetail() {
   const { id } = useParams()
@@ -16,6 +17,9 @@ export default function GroupDetail() {
   const [leaving, setLeaving] = useState(false)
   const [leaveError, setLeaveError] = useState(null)
   const [joining, setJoining] = useState(false)
+
+  // Ryhmälistan luontimodaalin avaaminen ja sulkeminen
+  const [isGroupListModalOpen, setIsGroupListModalOpen] = useState(false)
 
   // Saadun kutsun hyväksyminen / hylkääminen
   const [respondBusy, setRespondBusy] = useState(false)
@@ -224,6 +228,15 @@ export default function GroupDetail() {
       setMemberError(err.response?.data?.message || 'Roolin vaihto epäonnistui')
     } finally {
       setBusyUserId(null)
+    }
+  }
+
+  // Avataan luotu ryhmälista onnistuneen luonnin jälkeen
+  const handleGroupListCreated = (newList) => {
+    setIsGroupListModalOpen(false)
+
+    if (newList?.id) {
+      navigate(`/lists/${newList.id}`)
     }
   }
 
@@ -496,13 +509,38 @@ export default function GroupDetail() {
           )}
         </div>
 
-        {/* Elokuvat */}
+        {/* Ryhmän listat */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
-          <h3 className="font-bold text-lg mb-4">Ryhmän elokuvat</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Ei vielä elokuvia tässä ryhmässä.
-          </p>
-        </div>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="font-bold text-lg">Ryhmän listat</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Ryhmän yhteiset elokuvalistat
+              </p>
+            </div>
+
+            {/* Vain ryhmän ylläpitäjä voi luoda ryhmälistan */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsGroupListModalOpen(true)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow transition cursor-pointer shrink-0"
+              >
+                + Luo lista
+              </button>
+            )}
+          </div>
+
+          {group.isMember ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Ryhmän listat näkyvät myös Jaetut listat -osiossa.
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Ryhmän listat näkyvät vain ryhmän jäsenille.
+            </p>
+          )}
+        </div>        
       </div>
 
       {/* Poistumisen vahvistusmodaali */}
@@ -567,6 +605,13 @@ export default function GroupDetail() {
           </div>
         </div>
       )}
+
+      <CreateGroupListModal
+        groupId={id}
+        isOpen={isGroupListModalOpen}
+        onClose={() => setIsGroupListModalOpen(false)}
+        onListCreated={handleGroupListCreated}
+      />
     </div>
   )
 }
