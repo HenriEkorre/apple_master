@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { CloseIcon } from './Icons'
 
 export default function CreateGroupListModal({
   groupId,
@@ -90,7 +91,7 @@ export default function CreateGroupListModal({
             aria-label="Sulje"
             className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold px-2 cursor-pointer disabled:opacity-50"
           >
-            ✕
+            <CloseIcon />
           </button>
         </div>
 

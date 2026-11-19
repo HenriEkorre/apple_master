@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { useAuth } from '../AuthProvider'
+import { CheckIcon } from './Icons'
 
 export default function AddToListButton({ movieId }) {
   const { user } = useAuth()
@@ -164,7 +165,10 @@ export default function AddToListButton({ movieId }) {
                     <div className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm opacity-70">
                       <span className="truncate">{list.title}</span>
                       <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 shrink-0">
-                        {justAddedId === list.id ? 'Lisätty ✓' : 'Listalla ✓'}
+                        <span className="inline-flex items-center gap-1">
+                          {justAddedId === list.id ? 'Lisätty' : 'Listalla'}
+                          <CheckIcon />
+                        </span>
                       </span>
                     </div>
                   ) : (

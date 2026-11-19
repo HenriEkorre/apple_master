@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import MovieDetailsSkeleton from '../components/MovieDetailsSkeleton'
 import AddToListButton from '../components/AddToListButton'
+import { CalendarIcon, ClockIcon, StarIcon } from '../components/Icons'
 
 export default function MovieDetails() {
   // Nappaa elokuvan ID URL-osoitteesta 
@@ -86,9 +87,9 @@ export default function MovieDetails() {
 
             {/* Pienet metatiedot: julkaisuvuosi, kesto, arvosana */}
             <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300 mb-4">
-              {movie.release_date && <span>📅 {movie.release_date}</span>}
-              {movie.runtime && <span>⏱️ {movie.runtime} min</span>}
-              {movie.vote_average && <span>⭐ {movie.vote_average.toFixed(1)} / 10</span>}
+              {movie.release_date && <span className="flex items-center gap-1.5"><CalendarIcon /> {movie.release_date}</span>}
+              {movie.runtime && <span className="flex items-center gap-1.5"><ClockIcon /> {movie.runtime} min</span>}
+              {movie.vote_average && <span className="flex items-center gap-1.5"><StarIcon /> {movie.vote_average.toFixed(1)} / 10</span>}
 
               
             </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 import MovieDetailsSkeleton from '../components/MovieDetailsSkeleton'
+import { CalendarIcon, CrossIcon, PinIcon } from '../components/Icons'
 
 export default function PersonDetails() {
   const { id } = useParams()
@@ -78,9 +79,9 @@ export default function PersonDetails() {
           )}
 
           <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-300 mb-6">
-            {person.birthday && <span>📅 Syntynyt {person.birthday}</span>}
-            {person.deathday && <span>✝ Kuollut {person.deathday}</span>}
-            {person.place_of_birth && <span>📍 {person.place_of_birth}</span>}
+            {person.birthday && <span className="flex items-center gap-1.5"><CalendarIcon /> Syntynyt {person.birthday}</span>}
+            {person.deathday && <span className="flex items-center gap-1.5"><CrossIcon /> Kuollut {person.deathday}</span>}
+            {person.place_of_birth && <span className="flex items-center gap-1.5"><PinIcon /> {person.place_of_birth}</span>}
           </div>
 
           {person.homepage && (

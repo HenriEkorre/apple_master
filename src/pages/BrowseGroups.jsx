@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import CreateGroupModal from '../components/CreateGroupModal'
+import { UsersIcon } from '../components/Icons'
 
 export default function BrowseGroups() {
   const [groups, setGroups] = useState([])
@@ -113,7 +114,7 @@ export default function BrowseGroups() {
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                  <span>👥 Ryhmä</span>
+                  <span className="flex items-center gap-1.5"><UsersIcon /> Ryhmä</span>
                   
                   <span className="text-indigo-600 dark:text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 font-semibold transition flex items-center gap-1">
                     Näytä ryhmä →
