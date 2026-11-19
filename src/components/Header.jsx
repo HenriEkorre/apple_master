@@ -7,17 +7,19 @@ import { useAuth } from '../AuthProvider'
 export default function Header({ onOpenAuth }) {
   const [query, setQuery] = useState('')
   const [movieSuggestions, setMovieSuggestions] = useState([])
+  const [peopleSuggestions, setPeopleSuggestions] = useState([])
   const [groupSuggestions, setGroupSuggestions] = useState([])
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
-  // Live-haku: hakee elokuvat ja ryhmät backendistä kun query muuttuu
+  // Live-haku: hakee elokuvat, henkilöt ja ryhmät backendistä kun query muuttuu
   useEffect(() => {
     const trimmedQuery = query.trim()
 
     if (trimmedQuery === '') {
       setMovieSuggestions([])
+      setPeopleSuggestions([])
       setGroupSuggestions([])
       return
     }
@@ -36,9 +38,23 @@ export default function Header({ onOpenAuth }) {
         })
         .catch((error) => {
           console.error('Virhe ehdotusten haussa:', error)
+          if (!cancelled) setMovieSuggestions([])
         })
 
-      // 2. Hae ryhmät backendistä (max 3 kpl). Ryhmähaku vaatii kirjautumisen.
+      // 2. Hae henkilöt backendistä (max 1 kpl)
+      axios
+        .get(`/api/people/search?q=${encodeURIComponent(trimmedQuery)}`)
+        .then((response) => {
+          if (cancelled) return
+          const results = response.data.results || response.data
+          setPeopleSuggestions(results.slice(0, 1))
+        })
+        .catch((error) => {
+          console.error('Virhe henkilöehdotusten haussa:', error)
+          if (!cancelled) setPeopleSuggestions([])
+        })
+
+      // 3. Hae ryhmät backendistä (max 3 kpl). Ryhmähaku vaatii kirjautumisen.
       if (user) {
         axios
           .get(`/api/groups/search?q=${encodeURIComponent(trimmedQuery)}&limit=3`, {
@@ -71,11 +87,12 @@ export default function Header({ onOpenAuth }) {
     navigate(`/search?q=${encodeURIComponent(query.trim())}`)
 
     setMovieSuggestions([])
+    setPeopleSuggestions([])
     setGroupSuggestions([])
     setQuery('')
   }
 
-  const hasSuggestions = movieSuggestions.length > 0 || groupSuggestions.length > 0
+  const hasSuggestions = movieSuggestions.length > 0 || peopleSuggestions.length > 0 || groupSuggestions.length > 0
 
   return (
     <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 px-4 md:px-6 py-4 flex items-center justify-between gap-3">
@@ -94,7 +111,7 @@ export default function Header({ onOpenAuth }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Hae elokuvaa tai ryhmää..." 
+            placeholder="Hae elokuvaa, henkilöä tai ryhmää..." 
             className="w-full px-3 py-1.5 md:px-4 md:py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
@@ -120,7 +137,7 @@ export default function Header({ onOpenAuth }) {
             {/* ELOKUVAT */}
             {movieSuggestions.length > 0 && (
               <div>
-                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                   Elokuvat
                 </div>
                 {movieSuggestions.map((movie) => (
@@ -129,6 +146,7 @@ export default function Header({ onOpenAuth }) {
                     to={`/movie/${movie.id}`}
                     onClick={() => {
                       setMovieSuggestions([])
+                      setPeopleSuggestions([])
                       setGroupSuggestions([])
                       setQuery('')
                     }}
@@ -150,10 +168,54 @@ export default function Header({ onOpenAuth }) {
               </div>
             )}
 
+            {/* HENKILÖT */}
+            {peopleSuggestions.length > 0 && (
+              <div>
+                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider border-t border-gray-200 dark:border-gray-700">
+                  Henkilöt
+                </div>
+                {peopleSuggestions.map((person) => (
+                  <Link
+                    key={`person-${person.id}`}
+                    to={`/person/${person.id}`}
+                    onClick={() => {
+                      setMovieSuggestions([])
+                      setPeopleSuggestions([])
+                      setGroupSuggestions([])
+                      setQuery('')
+                    }}
+                    className="flex items-center gap-3 p-2.5 border-b border-gray-100 dark:border-gray-800"
+                  >
+                    {person.profile_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w92${person.profile_path}`}
+                        alt={person.name}
+                        className="w-8 h-12 object-cover rounded shadow"
+                      />
+                    ) : (
+                      <div className="w-8 h-12 rounded bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-gray-300">
+                        {person.name?.charAt(0) || '?'}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs md:text-sm font-bold text-gray-900 dark:text-white truncate">
+                        {person.name}
+                      </h4>
+                      {person.known_for_department && (
+                        <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+                          {person.known_for_department}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
             {/* RYHMÄT */}
             {groupSuggestions.length > 0 && (
               <div>
-                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-t border-gray-200 dark:border-gray-700">
+                <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider border-t border-gray-200 dark:border-gray-700">
                   Ryhmät
                 </div>
                 {groupSuggestions.map((group) => (
@@ -162,6 +224,7 @@ export default function Header({ onOpenAuth }) {
                     to={`/groups/${group.id}`}
                     onClick={() => {
                       setMovieSuggestions([])
+                      setPeopleSuggestions([])
                       setGroupSuggestions([])
                       setQuery('')
                     }}
@@ -174,7 +237,7 @@ export default function Header({ onOpenAuth }) {
                         {group.description || 'Ei kuvausta'}
                       </p>
                     </div>
-                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-semibold shrink-0">
+                    <span className="text-[10px] bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded font-semibold shrink-0">
                       {group.member_count ?? 0} jäs.
                     </span>
                   </Link>
