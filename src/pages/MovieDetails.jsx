@@ -131,7 +131,7 @@ export default function MovieDetails() {
               allowFullScreen
             />
           </div>
-       </div>
+        </div>
       )}
     </div>
   )

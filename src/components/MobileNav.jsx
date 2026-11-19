@@ -38,10 +38,10 @@ export default function MobileNav({ onOpenAuth }) {
         </svg>
         <span className="mt-0.5 text-[10px]">Haku</span>
       </Link>
-        <Link
-          to="/lists"
-          className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
-        >
+      <Link
+        to="/lists"
+        className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
+      >
         <svg
           className="size-5 fill-current"
           viewBox="0 0 24 24"

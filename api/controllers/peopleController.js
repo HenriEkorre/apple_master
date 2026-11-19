@@ -50,8 +50,8 @@ export const getPersonDetails = async (req, res, next) => {
 
     const cast = Array.isArray(creditsResponse.data?.cast)
       ? creditsResponse.data.cast
-          .filter((movie) => movie.poster_path)
-          .sort((a, b) => (b.release_date || '').localeCompare(a.release_date || ''))
+        .filter((movie) => movie.poster_path)
+        .sort((a, b) => (b.release_date || '').localeCompare(a.release_date || ''))
       : []
 
     res.status(200).json({

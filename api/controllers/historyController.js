@@ -25,7 +25,7 @@ export const addToHistory = async (req, res, next) => {
     const { movieId } = req.body
 
     if (!movieId) {
-      return res.status(400).json({ error: "Movie ID is required" })
+      return res.status(400).json({ error: 'Movie ID is required' })
     }
 
     const result = await pool.query(

@@ -17,28 +17,28 @@ export default function Sidebar({ onOpenAuth }) {
 
   useEffect(() => {
   // Ei kirjautunutta käyttäjää: tyhjennetään lista äläkä hae mitään
-  if (!user) {
-    setMyGroups([])
-    return
-  }
-
-  const fetchMyGroups = async () => {
-    try {
-      const response = await axios.get('/api/groups/my', {
-        withCredentials: true,
-      })
-      setMyGroups(response.data)
-    } catch (error) {
-      console.error('Virhe omien ryhmien haussa sivupalkissa:', error)
+    if (!user) {
       setMyGroups([])
+      return
     }
-  }
 
-  fetchMyGroups()
+    const fetchMyGroups = async () => {
+      try {
+        const response = await axios.get('/api/groups/my', {
+          withCredentials: true,
+        })
+        setMyGroups(response.data)
+      } catch (error) {
+        console.error('Virhe omien ryhmien haussa sivupalkissa:', error)
+        setMyGroups([])
+      }
+    }
 
-  // Päivitetään lista aina kun ryhmät muuttuvat (liittyminen, poistuminen, luonti)
-  window.addEventListener('groups-changed', fetchMyGroups)
-  return () => window.removeEventListener('groups-changed', fetchMyGroups)
+    fetchMyGroups()
+
+    // Päivitetään lista aina kun ryhmät muuttuvat (liittyminen, poistuminen, luonti)
+    window.addEventListener('groups-changed', fetchMyGroups)
+    return () => window.removeEventListener('groups-changed', fetchMyGroups)
   }, [user?.id])
 
   return (

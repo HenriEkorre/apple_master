@@ -17,17 +17,12 @@ export const getMyGroups = async (req, res, next) => {
       `SELECT g.* FROM groups g
        JOIN group_members gm ON g.id = gm.group_id
        WHERE gm.user_id = $1 AND gm.status = 'active'`,
-      [userId]
+      [userId],
     )
-    // Ryhmille valmiit linkit profiilisivua varten
-    const groupsWithLinks = (result.rows || []).map((group) => ({
-      ...group,
-      link: `/groups/${group.id}`,
-    }))
 
     return res.status(200).json(result.rows || [])
   } catch (error) {
-    console.error("VIRHE getMyGroups-funktiossa:", error.message)
+    console.error('VIRHE getMyGroups-funktiossa:', error.message)
     next(error)
   }
 }
@@ -43,7 +38,7 @@ export const getMyInvitations = async (req, res, next) => {
        JOIN group_members gm ON g.id = gm.group_id
        WHERE gm.user_id = $1 AND gm.status = 'pending'
        ORDER BY g.name`,
-      [userId]
+      [userId],
     )
 
     res.status(200).json(result.rows)
@@ -61,7 +56,7 @@ export const joinPublicGroup = async (req, res, next) => {
     // Tarkistetaan ryhmän tunnus
     if (!Number.isInteger(groupId) || groupId <= 0) {
       return res.status(400).json({
-        message: 'Virheellinen ryhmän tunnus'
+        message: 'Virheellinen ryhmän tunnus',
       })
     }
 
@@ -70,12 +65,12 @@ export const joinPublicGroup = async (req, res, next) => {
       `SELECT id, type
        FROM groups
        WHERE id = $1`,
-      [groupId]
+      [groupId],
     )
 
     if (groupResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Ryhmää ei löytynyt'
+        message: 'Ryhmää ei löytynyt',
       })
     }
 
@@ -83,7 +78,7 @@ export const joinPublicGroup = async (req, res, next) => {
 
     if (group.type !== 'public') {
       return res.status(403).json({
-        message: 'Suljettuun ryhmään pääsee vain kutsulla'
+        message: 'Suljettuun ryhmään pääsee vain kutsulla',
       })
     }
 
@@ -99,12 +94,12 @@ export const joinPublicGroup = async (req, res, next) => {
        ON CONFLICT (group_id, user_id)
        DO UPDATE SET status = 'active'
        RETURNING id, group_id, user_id, role, status`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     res.status(200).json({
       message: 'Ryhmään liittyminen onnistui',
-      membership: result.rows[0]
+      membership: result.rows[0],
     })
   } catch (error) {
     next(error)
@@ -117,12 +112,13 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
   try {
     const adminId = req.user.id
     const groupId = Number(req.params.groupId)
-    const rawUsername = typeof req.body.username === 'string' ? req.body.username.trim() : ''
+    const rawUsername =
+      typeof req.body.username === 'string' ? req.body.username.trim() : ''
 
     // Tarkistetaan ryhmän tunnus
     if (!Number.isInteger(groupId) || groupId <= 0) {
       return res.status(400).json({
-        message: 'Virheellinen ryhmän tunnus'
+        message: 'Virheellinen ryhmän tunnus',
       })
     }
 
@@ -131,12 +127,12 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       `SELECT id, type
        FROM groups
        WHERE id = $1`,
-      [groupId]
+      [groupId],
     )
 
     if (groupResult.rows.length === 0) {
       return res.status(404).json({
-        message: 'Ryhmää ei löytynyt'
+        message: 'Ryhmää ei löytynyt',
       })
     }
 
@@ -145,7 +141,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
     // Kutsuja voi lähettää vain suljettuun ryhmään (closed)
     if (group.type !== 'closed') {
       return res.status(400).json({
-        message: 'Kutsuja voi lähettää vain suljettuun ryhmään'
+        message: 'Kutsuja voi lähettää vain suljettuun ryhmään',
       })
     }
 
@@ -157,12 +153,12 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
          AND user_id = $2
          AND role = 'admin'
          AND status = 'active'`,
-      [groupId, adminId]
+      [groupId, adminId],
     )
 
     if (adminResult.rows.length === 0) {
       return res.status(403).json({
-        message: 'Vain ryhmän ylläpitäjä voi lähettää kutsuja'
+        message: 'Vain ryhmän ylläpitäjä voi lähettää kutsuja',
       })
     }
 
@@ -174,12 +170,12 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
         `SELECT id
          FROM users
          WHERE LOWER(username) = LOWER($1)`,
-        [rawUsername]
+        [rawUsername],
       )
 
       if (userByName.rows.length === 0) {
         return res.status(404).json({
-          message: 'Kutsuttavaa käyttäjää ei löytynyt'
+          message: 'Kutsuttavaa käyttäjää ei löytynyt',
         })
       }
 
@@ -190,7 +186,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
       // Tarkistetaan kutsuttavan käyttäjän tunnus
       if (!Number.isInteger(invitedUserId) || invitedUserId <= 0) {
         return res.status(400).json({
-          message: 'Anna kutsuttavan käyttäjänimi'
+          message: 'Anna kutsuttavan käyttäjänimi',
         })
       }
 
@@ -199,12 +195,12 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
         `SELECT id
          FROM users
          WHERE id = $1`,
-        [invitedUserId]
+        [invitedUserId],
       )
 
       if (userResult.rows.length === 0) {
         return res.status(404).json({
-          message: 'Kutsuttavaa käyttäjää ei löytynyt'
+          message: 'Kutsuttavaa käyttäjää ei löytynyt',
         })
       }
     }
@@ -212,7 +208,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
     // Käyttäjä ei voi kutsua itseään
     if (adminId === invitedUserId) {
       return res.status(400).json({
-        message: 'Et voi kutsua itseäsi ryhmään'
+        message: 'Et voi kutsua itseäsi ryhmään',
       })
     }
 
@@ -222,7 +218,7 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
        FROM group_members
        WHERE group_id = $1
          AND user_id = $2`,
-      [groupId, invitedUserId]
+      [groupId, invitedUserId],
     )
 
     if (existingMembershipResult.rows.length > 0) {
@@ -230,12 +226,12 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
 
       if (existingMembership.status === 'active') {
         return res.status(409).json({
-          message: 'Käyttäjä on jo ryhmän jäsen'
+          message: 'Käyttäjä on jo ryhmän jäsen',
         })
       }
 
       return res.status(409).json({
-        message: 'Käyttäjälle on jo lähetetty kutsu'
+        message: 'Käyttäjälle on jo lähetetty kutsu',
       })
     }
 
@@ -249,17 +245,17 @@ export const inviteUserToClosedGroup = async (req, res, next) => {
        )
        VALUES ($1, $2, 'member', 'pending')
        RETURNING id, group_id, user_id, role, status`,
-      [groupId, invitedUserId]
+      [groupId, invitedUserId],
     )
 
     res.status(201).json({
       message: 'Ryhmäkutsu lähetettiin onnistuneesti',
-      invitation: result.rows[0]
+      invitation: result.rows[0],
     })
   } catch (error) {
     next(error)
   }
-} 
+}
 
 // Käyttäjä hyväksyy saamansa kutsun (pending -> active)
 // Kutsun hylkääminen tehdään leaveGroup-funktiolla (poistaa rivin)
@@ -270,7 +266,7 @@ export const acceptInvitation = async (req, res, next) => {
 
     if (!Number.isInteger(groupId) || groupId <= 0) {
       return res.status(400).json({
-        message: 'Virheellinen ryhmän tunnus'
+        message: 'Virheellinen ryhmän tunnus',
       })
     }
 
@@ -281,18 +277,18 @@ export const acceptInvitation = async (req, res, next) => {
          AND user_id = $2
          AND status = 'pending'
        RETURNING id, group_id, user_id, role, status`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: 'Kutsua ei löytynyt'
+        message: 'Kutsua ei löytynyt',
       })
     }
 
     res.status(200).json({
       message: 'Kutsu hyväksyttiin',
-      membership: result.rows[0]
+      membership: result.rows[0],
     })
   } catch (error) {
     next(error)
@@ -308,14 +304,14 @@ export const createGroup = async (req, res, next) => {
     // Pakolliset kentät
     if (!name || !type) {
       return res.status(400).json({
-        message: "Nimi ja ryhmän tyyppi ovat pakollisia"
+        message: 'Nimi ja ryhmän tyyppi ovat pakollisia',
       })
     }
 
     // Sallitaan vain enum-arvot
-    if (!["public", "closed"].includes(type)) {
+    if (!['public', 'closed'].includes(type)) {
       return res.status(400).json({
-        message: "Ryhmän tyyppi täytyy olla joko public tai closed"
+        message: 'Ryhmän tyyppi täytyy olla joko public tai closed',
       })
     }
 
@@ -324,7 +320,7 @@ export const createGroup = async (req, res, next) => {
        (name, description, type, creator_id)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [name, description, type, creatorId]
+      [name, description, type, creatorId],
     )
 
     const group = groupResult.rows[0]
@@ -333,7 +329,7 @@ export const createGroup = async (req, res, next) => {
       `INSERT INTO group_members
        (group_id, user_id, role, status)
        VALUES ($1, $2, 'admin', 'active')`,
-      [group.id, creatorId]
+      [group.id, creatorId],
     )
 
     res.status(201).json(group)
@@ -360,7 +356,7 @@ export const getGroupById = async (req, res, next) => {
         (SELECT COUNT(*) FROM group_members gm
          WHERE gm.group_id = g.id AND gm.status = 'active') AS member_count
        FROM groups g WHERE g.id = $1`,
-      [groupId]
+      [groupId],
     )
 
     if (groupResult.rows.length === 0) {
@@ -374,7 +370,7 @@ export const getGroupById = async (req, res, next) => {
       `SELECT role, status
        FROM group_members
        WHERE group_id = $1 AND user_id = $2`,
-      [groupId, userId]
+      [groupId, userId],
     )
 
     const membership = membershipResult.rows[0]
@@ -392,7 +388,7 @@ export const getGroupById = async (req, res, next) => {
          JOIN users u ON gm.user_id = u.id
          WHERE gm.group_id = $1
            AND ($2::boolean OR gm.status = 'active')`,
-        [groupId, isAdmin]
+        [groupId, isAdmin],
       )
       members = membersResult.rows
     }
@@ -403,7 +399,7 @@ export const getGroupById = async (req, res, next) => {
       isMember,
       myStatus,
       myRole,
-      members
+      members,
     })
   } catch (error) {
     next(error)
@@ -417,7 +413,7 @@ export const getAllGroups = async (req, res, next) => {
       `SELECT g.*, 
         (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id AND gm.status = 'active') AS member_count
        FROM groups g 
-       ORDER BY g.created_at DESC`
+       ORDER BY g.created_at DESC`,
     )
     res.status(200).json(result.rows)
   } catch (error) {
@@ -441,7 +437,7 @@ export const leaveGroup = async (req, res, next) => {
     // Lukitaan ryhmä, jotta samanaikaiset poistumiset menevät jonoon
     const groupResult = await client.query(
       'SELECT id FROM groups WHERE id = $1 FOR UPDATE',
-      [groupId]
+      [groupId],
     )
     if (groupResult.rows.length === 0) {
       await client.query('ROLLBACK')
@@ -451,7 +447,7 @@ export const leaveGroup = async (req, res, next) => {
     const membershipResult = await client.query(
       `SELECT role, status FROM group_members
        WHERE group_id = $1 AND user_id = $2`,
-      [groupId, userId]
+      [groupId, userId],
     )
     if (membershipResult.rows.length === 0) {
       await client.query('ROLLBACK')
@@ -467,20 +463,23 @@ export const leaveGroup = async (req, res, next) => {
            COUNT(*) FILTER (WHERE role = 'admin') AS other_admins
          FROM group_members
          WHERE group_id = $1 AND user_id <> $2 AND status = 'active'`,
-        [groupId, userId]
+        [groupId, userId],
       )
       const otherMembers = Number(othersResult.rows[0].other_members)
       const otherAdmins = Number(othersResult.rows[0].other_admins)
 
       // Viimeinen aktiivinen jäsen: poistetaan koko ryhmä
       if (otherMembers === 0) {
-        await client.query('DELETE FROM group_members WHERE group_id = $1', [groupId])
+        await client.query('DELETE FROM group_members WHERE group_id = $1', [
+          groupId,
+        ])
         // Jos ryhmillä on omia elokuvalistoja, poista nekin (owner_id ei ole FK):
         // await client.query(`DELETE FROM lists WHERE owner_type = 'group' AND owner_id = $1`, [groupId])
         await client.query('DELETE FROM groups WHERE id = $1', [groupId])
         await client.query('COMMIT')
         return res.status(200).json({
-          message: 'Poistuit ryhmästä ja ryhmä poistettiin, koska siihen ei jäänyt jäseniä',
+          message:
+						'Poistuit ryhmästä ja ryhmä poistettiin, koska siihen ei jäänyt jäseniä',
           groupDeleted: true,
         })
       }
@@ -497,7 +496,7 @@ export const leaveGroup = async (req, res, next) => {
     // Tavallinen poistuminen (tai kutsun hylkääminen, jos status = pending)
     await client.query(
       'DELETE FROM group_members WHERE group_id = $1 AND user_id = $2',
-      [groupId, userId]
+      [groupId, userId],
     )
 
     await client.query('COMMIT')
@@ -517,28 +516,36 @@ export const removeMember = async (req, res, next) => {
     const groupId = Number(req.params.groupId)
     const targetUserId = Number(req.params.userId)
 
-    if (!Number.isInteger(groupId) || groupId <= 0 ||
-        !Number.isInteger(targetUserId) || targetUserId <= 0) {
+    if (
+      !Number.isInteger(groupId) ||
+			groupId <= 0 ||
+			!Number.isInteger(targetUserId) ||
+			targetUserId <= 0
+    ) {
       return res.status(400).json({ message: 'Virheellinen tunnus' })
     }
 
     if (adminId === targetUserId) {
-      return res.status(400).json({ message: 'Käytä poistumistoimintoa omaan jäsenyyteesi' })
+      return res
+        .status(400)
+        .json({ message: 'Käytä poistumistoimintoa omaan jäsenyyteesi' })
     }
 
     // Pyytäjän pitää olla ryhmän aktiivinen ylläpitäjä
     const adminResult = await pool.query(
       `SELECT 1 FROM group_members
        WHERE group_id = $1 AND user_id = $2 AND role = 'admin' AND status = 'active'`,
-      [groupId, adminId]
+      [groupId, adminId],
     )
     if (adminResult.rows.length === 0) {
-      return res.status(403).json({ message: 'Vain ylläpitäjä voi poistaa jäseniä' })
+      return res
+        .status(403)
+        .json({ message: 'Vain ylläpitäjä voi poistaa jäseniä' })
     }
 
     const targetResult = await pool.query(
       'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
-      [groupId, targetUserId]
+      [groupId, targetUserId],
     )
     if (targetResult.rows.length === 0) {
       return res.status(404).json({ message: 'Käyttäjä ei ole ryhmän jäsen' })
@@ -546,12 +553,17 @@ export const removeMember = async (req, res, next) => {
 
     // Ylläpitäjää ei voi poistaa suoraan, rooli pitää ensin poistaa
     if (targetResult.rows[0].role === 'admin') {
-      return res.status(403).json({ message: 'Ylläpitäjää ei voi poistaa. Poista ensin hänen ylläpitäjän roolinsa.' })
+      return res
+        .status(403)
+        .json({
+          message:
+						'Ylläpitäjää ei voi poistaa. Poista ensin hänen ylläpitäjän roolinsa.',
+        })
     }
 
     await pool.query(
       'DELETE FROM group_members WHERE group_id = $1 AND user_id = $2',
-      [groupId, targetUserId]
+      [groupId, targetUserId],
     )
 
     res.status(200).json({ message: 'Jäsen poistettiin ryhmästä' })
@@ -567,12 +579,18 @@ export const updateMemberRole = async (req, res, next) => {
     const targetUserId = Number(req.params.userId)
     const { role } = req.body
 
-    if (!Number.isInteger(groupId) || groupId <= 0 ||
-        !Number.isInteger(targetUserId) || targetUserId <= 0) {
+    if (
+      !Number.isInteger(groupId) ||
+			groupId <= 0 ||
+			!Number.isInteger(targetUserId) ||
+			targetUserId <= 0
+    ) {
       return res.status(400).json({ message: 'Virheellinen tunnus' })
     }
     if (!['admin', 'member'].includes(role)) {
-      return res.status(400).json({ message: 'Rooli täytyy olla admin tai member' })
+      return res
+        .status(400)
+        .json({ message: 'Rooli täytyy olla admin tai member' })
     }
     if (adminId === targetUserId) {
       return res.status(400).json({ message: 'Et voi muuttaa omaa rooliasi' })
@@ -581,10 +599,12 @@ export const updateMemberRole = async (req, res, next) => {
     const adminResult = await pool.query(
       `SELECT 1 FROM group_members
        WHERE group_id = $1 AND user_id = $2 AND role = 'admin' AND status = 'active'`,
-      [groupId, adminId]
+      [groupId, adminId],
     )
     if (adminResult.rows.length === 0) {
-      return res.status(403).json({ message: 'Vain ylläpitäjä voi muuttaa rooleja' })
+      return res
+        .status(403)
+        .json({ message: 'Vain ylläpitäjä voi muuttaa rooleja' })
     }
 
     // Vain aktiivisen jäsenen roolia voi muuttaa (ei odottavan kutsun)
@@ -592,10 +612,12 @@ export const updateMemberRole = async (req, res, next) => {
       `UPDATE group_members SET role = $1
        WHERE group_id = $2 AND user_id = $3 AND status = 'active'
        RETURNING user_id, role`,
-      [role, groupId, targetUserId]
+      [role, groupId, targetUserId],
     )
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Aktiivista jäsentä ei löytynyt' })
+      return res
+        .status(404)
+        .json({ message: 'Aktiivista jäsentä ei löytynyt' })
     }
 
     res.status(200).json(result.rows[0])
@@ -607,7 +629,8 @@ export const updateMemberRole = async (req, res, next) => {
 // Hae ryhmiä nimen tai kuvauksen perusteella (GET /api/groups/search?q=...&limit=...)
 export const searchGroups = async (req, res, next) => {
   try {
-    const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
+    const q =
+      typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 100) : ''
 
     // Tyhjällä haulla ei palauteta mitään
     if (!q) {
@@ -620,7 +643,6 @@ export const searchGroups = async (req, res, next) => {
       ? Math.min(Math.max(requestedLimit, 1), 50)
       : 20
 
-    
     const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`
 
     const result = await pool.query(
@@ -631,7 +653,7 @@ export const searchGroups = async (req, res, next) => {
        WHERE g.name ILIKE $1 OR g.description ILIKE $1
        ORDER BY g.name
        LIMIT $2`,
-      [pattern, limit]
+      [pattern, limit],
     )
 
     res.status(200).json(result.rows)
