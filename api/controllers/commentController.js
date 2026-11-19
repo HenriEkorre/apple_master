@@ -1,18 +1,15 @@
-import { pool } from '../models/db.js'
+import {
+  createComment as insertComment,
+  findCommentsByUserId,
+} from '../repositories/userActivityRepository.js'
 
 // Hae kirjautuneen käyttäjän omat kommentit
 export const getMyComments = async (req, res, next) => {
   try {
     const userId = req.user.id
 
-    const result = await pool.query(
-      `SELECT * FROM comments 
-       WHERE user_id = $1 
-       ORDER BY created_at DESC`,
-      [userId]
-    )
-
-    res.status(200).json(result.rows)
+    const comments = await findCommentsByUserId(userId)
+    res.status(200).json(comments)
   } catch (error) {
     next(error)
   }
@@ -30,14 +27,8 @@ export const createComment = async (req, res, next) => {
       return res.status(400).json({ error: 'Movie ID and content are required' })
     }
 
-    const result = await pool.query(
-      `INSERT INTO comments (user_id, movie_id, content) 
-       VALUES ($1, $2, $3) 
-       RETURNING *`,
-      [userId, movieId, content]
-    )
-
-    res.status(201).json(result.rows[0])
+    const commentRow = await insertComment(userId, movieId, content)
+    res.status(201).json(commentRow)
   } catch (error) {
     next(error)
   }

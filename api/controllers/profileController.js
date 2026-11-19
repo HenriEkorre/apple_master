@@ -1,4 +1,7 @@
-import { pool } from '../models/db.js'
+import {
+  findActiveGroupsByUserId,
+  findProfileUserById,
+} from '../repositories/profileRepository.js'
 
 export const getProfile = async (req, res, next) => {
   try {
@@ -7,19 +10,10 @@ export const getProfile = async (req, res, next) => {
       return res.status(200).json([])
     }
 
-    const user = await pool.query(
-      `SELECT id, username, created_at FROM users WHERE id = $1`,
-      [userId],
-    )
+    const user = await findProfileUserById(userId)
+    const groups = await findActiveGroupsByUserId(userId)
 
-    const groups = await pool.query(
-      `SELECT g.* FROM groups g
-       JOIN group_members gm ON g.id = gm.group_id
-       WHERE gm.user_id = $1 AND gm.status = 'active'`,
-      [userId],
-    )
-
-    const groupsWithLinks = (groups.rows || []).map((group) => ({
+    const groupsWithLinks = groups.map((group) => ({
       ...group,
       name: group.name,
       link: `/groups/${group.id}`,
@@ -27,7 +21,7 @@ export const getProfile = async (req, res, next) => {
     }))
 
     const result = {
-      user: user.rows,
+      user,
       groups: groupsWithLinks,
     }
 

@@ -66,7 +66,6 @@ app.use('/api/groups', groupRouter)
 app.use('/api/lists', listRouter)
 app.use('/api/history', historyRouter)
 app.use('/api/reviews', reviewRouter)
-app.use('/api/reviews', reviewRouter)
 app.use('/api/comments', commentRouter)
 app.use('/api/profile', profileRouter)
 

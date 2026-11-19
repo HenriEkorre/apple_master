@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import { pool } from '../models/db.js'
+import { findSessionUserById } from '../repositories/sessionRepository.js'
 export const cookieName = 'auth'
 export const cookieOptions = {
   httpOnly: true, // httpOnly tarkoittaa, että eväste ei ole käytettävissä JavaScriptistä
@@ -25,11 +25,7 @@ export const protect = async (req, res, next) => {
     })
 
     // Haetaan käyttäjän tiedot tietokannasta käyttäjän id:n perusteella.
-    const result = await pool.query(
-      'SELECT id, username, email FROM users WHERE id = $1',
-      [payload.sub],
-    )
-    const user = result.rows[0]
+    const user = await findSessionUserById(payload.sub)
 
     // Jos käyttäjää ei löydy, palautetaan 401 Unauthorized
     if (!user) return res.status(401).json({ error: 'Käyttäjää ei löydy' })

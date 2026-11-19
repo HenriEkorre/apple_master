@@ -1,23 +1,14 @@
-import axios from 'axios'
+import {
+  getMovieDetails as fetchMovieDetails,
+  getPopularMovies as fetchPopularMovies,
+  searchMovies as fetchSearchMovies,
+} from '../clients/tmdbClient.js'
 
 // Kontrollerifunktio suosittujen elokuvien hakemiseen TMDB:stä
 const getPopularMovies = async (req, res, next) => {
   try {
-    const apiKey = process.env.TMDB_API_KEY
-
-    // Tehdään GET-pyyntö TMDB:n popular-rajapintaan
-    const response = await axios.get(
-      'https://api.themoviedb.org/3/movie/popular',
-      {
-        params: {
-          api_key: apiKey,
-          language: 'fi-FI',
-        },
-      },
-    )
-
-    // Palautetaan elokuvataulukko eteenpäin asiakkaalle
-    res.status(200).json(response.data.results || [])
+    const movies = await fetchPopularMovies()
+    res.status(200).json(movies)
   } catch (error) {
     // Siirretään virhe eteenpäin virheenkäsittelijälle (errorHandler)
     next(error)
@@ -27,7 +18,6 @@ const getPopularMovies = async (req, res, next) => {
 // Kontrollerifunktio elokuvien hakuun hakutermin perusteella
 const searchMovies = async (req, res, next) => {
   try {
-    const apiKey = process.env.TMDB_API_KEY
     const queryTerm = req.query.q // Otetaan hakutermi URL-parametrista
 
     // Tarkistetaan, että hakutermi on annettu
@@ -35,17 +25,8 @@ const searchMovies = async (req, res, next) => {
       return res.status(400).json({ error: 'Hakutermi (q) puuttuu' })
     }
 
-    const response = await axios.get(
-      'https://api.themoviedb.org/3/search/movie',
-      {
-        params: {
-          api_key: apiKey,
-          query: queryTerm,
-          language: 'fi-FI',
-        },
-      },
-    )
-    res.status(200).json(response.data.results || [])
+    const movies = await fetchSearchMovies(queryTerm)
+    res.status(200).json(movies)
   } catch (error) {
     // Siirretään virhe eteenpäin virheenkäsittelijälle
     next(error)
@@ -55,31 +36,8 @@ const searchMovies = async (req, res, next) => {
 // Hae yksittäisen elokuvan tiedot ID:n perusteella
 const getMovieDetails = async (req, res, next) => {
   try {
-    const apiKey = process.env.TMDB_API_KEY
     const movieId = req.params.id // Ottaa elokuvan ID:n URL-osoitteesta
-
-    const movieResponse = await axios.get(
-      `https://api.themoviedb.org/3/movie/${movieId}`,
-      {
-        params: {
-          api_key: apiKey,
-          language: 'fi-FI',
-        },
-      },
-    )
-
-    // Haetaan erillisellä kutsulla Youtube-trailerit
-    const videosResponse = await axios.get(
-      `https://api.themoviedb.org/3/movie/${movieId}/videos`,
-      {
-        params: {
-          api_key: apiKey,
-          language: 'en-US', // Videotiedot haetaan englanniksi, koska trailerit voivat olla kansainvälisiä
-        },
-      },
-    )
-
-    const videos = videosResponse.data.results || []
+    const { movie, videos } = await fetchMovieDetails(movieId)
 
     const trailer =
       videos.find(
@@ -96,7 +54,7 @@ const getMovieDetails = async (req, res, next) => {
 			)
 
     res.status(200).json({
-      ...movieResponse.data,
+      ...movie,
       trailer: trailer
         ? {
           name: trailer.name,

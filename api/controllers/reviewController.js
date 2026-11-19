@@ -1,18 +1,15 @@
-import { pool } from '../models/db.js'
+import {
+  createReview as insertReview,
+  findReviewsByUserId,
+} from '../repositories/userActivityRepository.js'
 
 // Hae kirjautuneen käyttäjän omat arvostelut
 export const getMyReviews = async (req, res, next) => {
   try {
     const userId = req.user.id
 
-    const result = await pool.query(
-      `SELECT * FROM reviews 
-       WHERE user_id = $1 
-       ORDER BY created_at DESC`,
-      [userId]
-    )
-
-    res.status(200).json(result.rows)
+    const reviews = await findReviewsByUserId(userId)
+    res.status(200).json(reviews)
   } catch (error) {
     next(error)
   }
@@ -30,14 +27,8 @@ export const createReview = async (req, res, next) => {
       return res.status(400).json({ error: 'Movie ID and rating are required' })
     }
 
-    const result = await pool.query(
-      `INSERT INTO reviews (user_id, tmdb_movie_id, rating, comment) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING *`,
-      [userId, movieId, rating, comment]
-    )
-
-    res.status(201).json(result.rows[0])
+    const review = await insertReview(userId, movieId, rating, comment)
+    res.status(201).json(review)
   } catch (error) {
     next(error)
   }
