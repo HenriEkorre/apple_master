@@ -130,17 +130,46 @@ export const getListById = async (req, res, next) => {
     const listId = parseId(req.params.id)
 
     if (!listId) {
-      return res.status(400).json({ message: 'Virheellinen listan tunnus' })
+      return res.status(400).json({
+        message: 'Virheellinen listan tunnus',
+      })
     }
 
-    const list = await findOwnedList(listId, userId)
+    const listResult = await pool.query(
+      `
+      SELECT DISTINCT l.*
+      FROM lists l
+      LEFT JOIN group_members gm
+        ON gm.group_id = l.owner_id
+      WHERE l.id = $1
+        AND (
+          (
+            l.owner_type = 'user'
+            AND l.owner_id = $2
+          )
+          OR
+          (
+            l.owner_type = 'group'
+            AND gm.user_id = $2
+            AND gm.status = 'active'
+          )
+        )
+      `,
+      [listId, userId]
+    )
+
+    const list = listResult.rows[0]
+
     if (!list) {
-      return res.status(404).json({ message: 'Listaa ei löytynyt' })
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt',
+      })
     }
 
     // Uusimmat elokuvat ensin
     const moviesResult = await pool.query(
-      `SELECT tmdb_movie_id FROM list_movies
+      `SELECT tmdb_movie_id
+       FROM list_movies
        WHERE list_id = $1
        ORDER BY added_at DESC, id DESC`,
       [listId]
@@ -150,7 +179,10 @@ export const getListById = async (req, res, next) => {
       moviesResult.rows.map((row) => row.tmdb_movie_id)
     )
 
-    res.status(200).json({ ...list, movies })
+    res.status(200).json({
+      ...list,
+      movies,
+    })
   } catch (error) {
     next(error)
   }
@@ -713,6 +745,40 @@ export const deleteGroupList = async (req, res, next) => {
     res.status(200).json({
       message: 'Lista poistettiin'
     })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Hae käyttäjälle ryhmien kautta jaetut listat
+export const getSharedLists = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+
+    const result = await pool.query(
+      `
+      SELECT
+        l.*,
+        g.name AS group_name,
+        (
+          SELECT COUNT(*)
+          FROM list_movies lm
+          WHERE lm.list_id = l.id
+        )::int AS movie_count
+      FROM lists l
+      JOIN groups g
+        ON g.id = l.owner_id
+      JOIN group_members gm
+        ON gm.group_id = g.id
+      WHERE l.owner_type = 'group'
+        AND gm.user_id = $1
+        AND gm.status = 'active'
+      ORDER BY l.created_at ASC, l.id ASC
+      `,
+      [userId]
+    )
+
+    res.status(200).json(result.rows)
   } catch (error) {
     next(error)
   }
