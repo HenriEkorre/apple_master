@@ -5,6 +5,7 @@ import {
   createList,
   getListById,
   updateList,
+  updateListSharing,
   deleteList,
   addMovieToList,
   removeMovieFromList,
@@ -26,6 +27,7 @@ router.patch('/groups/lists/:id', protect, updateGroupList)
 router.delete('/groups/lists/:id', protect, deleteGroupList)
 router.post('/groups/lists/:id/movies', protect, addMovieToGroupList)
 router.delete('/groups/lists/:id/movies/:tmdbMovieId', protect, removeMovieFromGroupList)
+router.patch('/:id/sharing', protect, updateListSharing)
 
 router.get('/:id', protect, getListById)
 router.patch('/:id', protect, updateList)
