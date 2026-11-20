@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS reviews CASCADE;
 DROP TABLE IF EXISTS list_movies CASCADE;
+DROP TABLE IF EXISTS list_groups CASCADE;
 DROP TABLE IF EXISTS lists CASCADE;
 DROP TABLE IF EXISTS group_members CASCADE;
 DROP TABLE IF EXISTS groups CASCADE;
@@ -15,7 +16,7 @@ CREATE TYPE group_type_enum AS ENUM ('public', 'closed');
 CREATE TYPE group_role_enum AS ENUM ('admin', 'member');
 CREATE TYPE member_status_enum AS ENUM ('active', 'pending');
 CREATE TYPE owner_type_enum AS ENUM ('user', 'group');
-CREATE TYPE visibility_type_enum AS ENUM ('private', 'group', 'public');
+CREATE TYPE visibility_type_enum AS ENUM ('private', 'shared', 'public');
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -50,7 +51,14 @@ CREATE TABLE lists (
     owner_type owner_type_enum NOT NULL,
     owner_id INTEGER NOT NULL,
     is_public_link BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+    visibility visibility_type_enum NOT NULL DEFAULT 'private',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_list_owner_visibility
+    CHECK (
+        (owner_type = 'user' AND visibility IN ('private', 'shared', 'public'))
+    OR
+        (owner_type = 'group' AND visibility IN ('private', 'public'))
+    )
 );
 
 CREATE TABLE list_movies (
@@ -60,6 +68,13 @@ CREATE TABLE list_movies (
     added_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     added_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_list_movie UNIQUE (list_id, tmdb_movie_id)
+);
+
+CREATE TABLE list_groups (
+    list_id INTEGER NOT NULL REFERENCES lists(id) ON DELETE CASCADE,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    shared_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_list_groups PRIMARY KEY (list_id, group_id)
 );
 
 CREATE TABLE reviews (
@@ -79,5 +94,6 @@ CREATE INDEX idx_group_members_user_id ON group_members(user_id);
 CREATE INDEX idx_lists_owner ON lists(owner_type, owner_id);
 CREATE INDEX idx_list_movies_list_id ON list_movies(list_id);
 CREATE INDEX idx_list_movies_added_by ON list_movies(added_by);
+CREATE INDEX idx_list_groups_group_id ON list_groups(group_id);
 CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 CREATE INDEX idx_reviews_tmdb_movie_id ON reviews(tmdb_movie_id);
