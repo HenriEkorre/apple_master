@@ -62,6 +62,7 @@ graph TD
         SelectVisibility[Valitse listan näkyvyys]
         SelectGroups[Valitse yksi tai useampi ryhmä]
         EditSharing[Muuta listan näkyvyyttä ja valittuja ryhmiä]
+        DeleteOwnList[Poista oma toivelista]
 
         GroupChat[Keskustele ryhmien chatissa]
         ManageGroups[Luo ryhmiä ja hae ryhmiin]
@@ -72,16 +73,20 @@ graph TD
         AdminActions[Kutsu ihmisiä ryhmään tai poista ryhmästä]
         AdminContent[Muokkaa ryhmän listoja]
         AdminVisibility[Muuta ryhmän listan näkyvyyttä]
+        DeleteGroupList[Poista ryhmän lista]
         AdminRights[Jaa ylläpitäjäoikeuksia]
 
         ManageLists --> SelectVisibility
         SelectVisibility --> SelectGroups
         ManageLists --> EditSharing
+        ManageLists --> DeleteOwnList
+
+        AdminContent --> AdminVisibility
+        AdminContent --> DeleteGroupList
     end
 
     Visitor --> Search
     Visitor --> ViewPublic
-
     User --> Search
     User --> ViewPublic
     User --> GroupChat
@@ -90,10 +95,8 @@ graph TD
     User --> ParticipateGroup
     User --> ReviewMovie
     User --> ManageOwnMembership
-
     Admin --> AdminActions
     Admin --> AdminContent
-    Admin --> AdminVisibility
     Admin --> AdminRights
 ```
 ---
