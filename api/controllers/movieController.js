@@ -110,4 +110,28 @@ const getMovieDetails = async (req, res, next) => {
   }
 }
 
-export { getPopularMovies, searchMovies, getMovieDetails }
+// Kontrollerifunktio parhaiten arvioitujen elokuvien hakemiseen TMDB:stä
+const getTopRatedMovies = async (req, res, next) => {
+  try {
+    const apiKey = process.env.TMDB_API_KEY
+
+    // Tehdään GET-pyyntö TMDB:n top_rated-rajapintaan
+    const response = await axios.get(
+      'https://api.themoviedb.org/3/movie/top_rated',
+      {
+        params: {
+          api_key: apiKey,
+          language: 'fi-FI',
+        },
+      },
+    )
+
+    // Palautetaan elokuvataulukko eteenpäin asiakkaalle
+    res.status(200).json(response.data.results || [])
+  } catch (error) {
+    // Siirretään virhe eteenpäin virheenkäsittelijälle (errorHandler)
+    next(error)
+  }
+}
+
+export { getPopularMovies, getTopRatedMovies, searchMovies, getMovieDetails }
