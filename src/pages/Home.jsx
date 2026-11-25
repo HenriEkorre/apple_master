@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react'
-import MovieCard from '../components/MovieCard'
-import MovieCardSkeleton from '../components/MovieCardSkeleton'
+import MovieRow from '../components/MovieRow'
 
 export default function Home() {
-  const [movies, setMovies] = useState([])
+  const [popularMovies, setPopularMovies] = useState([])
+  const [topRatedMovies, setTopRatedMovies] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    // Haetaan data backendistä
-    fetch('/api/movies/popular')
-      .then((response) => {
-        if (!response.ok) {
+    Promise.all([
+      fetch('/api/movies/popular'),
+      fetch('/api/movies/top-rated'),
+    ])
+      .then(async ([popularRes, topRatedRes]) => {
+        if (!popularRes.ok || !topRatedRes.ok) {
           throw new Error('Elokuvien haku backendistä epäonnistui')
         }
-        return response.json()
-      })
-      .then((data) => {
-        setMovies(data)
+
+        const [popularData, topRatedData] = await Promise.all([
+          popularRes.json(),
+          topRatedRes.json(),
+        ])
+
+        setPopularMovies(popularData)
+        setTopRatedMovies(topRatedData)
         setLoading(false)
       })
       .catch((err) => {
@@ -27,42 +33,21 @@ export default function Home() {
       })
   }, [])
 
-  if (loading) {
-    return (
-      <div aria-busy="true">
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white ">
-          Suositut elokuvat
-        </h2>
-
-        {/* Ruudunlukijoille */}
-        <span className="sr-only">Ladataan suosittuja elokuvia...</span>
-
-        {/* Skeleton-kortit samassa ruudukossa kuin oikeat kortit */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <MovieCardSkeleton key={index} />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-10">Virhe: {error}</div>
-  }
-
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white ">
-        Suositut elokuvat
-      </h2>
+    <div className="space-y-8 pb-20 md:pb-8">
+      <MovieRow
+        title="Suositut elokuvat"
+        movies={popularMovies}
+        loading={loading}
+        error={error}
+      />
 
-      {/* Korttiruudukko */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6">
-        {movies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
+      <MovieRow
+        title="Parhaiten arvioidut"
+        movies={topRatedMovies}
+        loading={loading}
+        error={error}
+      />
     </div>
   )
 }
