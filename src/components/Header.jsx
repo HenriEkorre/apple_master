@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import { useTheme } from '../ThemeProvider'
 import { useAuth } from '../AuthProvider'
+import Logo from './Logo'
 
 export default function Header({ onOpenAuth }) {
   const [query, setQuery] = useState('')
@@ -96,12 +97,13 @@ export default function Header({ onOpenAuth }) {
 
   return (
     <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 px-4 md:px-6 py-4 flex items-center justify-between gap-3">
-      {/* 1. Logo / Teksti */}
+      {/* 1. Logo (vain mobiilissa, pelkkä omena) */}
       <Link
         to="/"
-        className="md:hidden font-bold text-sm tracking-wider text-gray-900 dark:text-white shrink-0 hover:text-indigo-500 transition"
+        aria-label="apple_master – etusivu"
+        className="md:hidden shrink-0 text-gray-900 dark:text-white hover:text-indigo-500 transition"
       >
-        apple_master
+        <Logo collapsed className="size-8" />
       </Link>
 
       {/* 2. Hakukenttä ja live-ehdotukset */}
@@ -273,9 +275,21 @@ export default function Header({ onOpenAuth }) {
           <button
             type="button"
             onClick={logout}
-            className="shrink-0 rounded-lg bg-gray-700 px-3 py-2 text-sm text-white hover:bg-gray-600"
+            aria-label="Kirjaudu ulos"
+            title="Kirjaudu ulos"
+            className="shrink-0 rounded-lg bg-gray-700 p-2 text-white hover:bg-gray-600 transition cursor-pointer md:px-3 md:py-2 md:text-sm"
           >
-            Kirjaudu ulos
+            {/* Mobiili: vain kuvake */}
+            <svg
+              className="size-5 fill-current md:hidden"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+            </svg>
+
+            {/* Isompi näyttö: teksti */}
+            <span className="hidden md:inline">Kirjaudu ulos</span>
           </button>
         )}
       </div>

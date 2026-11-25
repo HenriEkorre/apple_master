@@ -10,6 +10,7 @@ export default function MobileNav({ onOpenAuth }) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-gray-200 bg-white px-1 py-2 text-xs shadow-2xl dark:border-gray-800 dark:bg-gray-900 md:hidden">
+      {/* Etusivu: kaikille */}
       <Link
         to="/"
         className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
@@ -23,36 +24,43 @@ export default function MobileNav({ onOpenAuth }) {
         </svg>
         <span className="mt-0.5 text-[10px]">Etusivu</span>
       </Link>
+
+      {/* Vain kirjautuneelle: arvostelut ja listat */}
+      {user && (
+        <>
+          <Link
+            to="/reviews"
+            className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
+          >
+            <svg
+              className="size-5 fill-current"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            <span className="mt-0.5 text-[10px]">Arvostelut</span>
+          </Link>
+
+          <Link
+            to="/lists"
+            className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
+          >
+            <svg
+              className="size-5 fill-current"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0 1 15.5 4 4.5 4.5 0 0 1 20 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35Z" />
+            </svg>
+            <span className="mt-0.5 text-[10px]">Listat</span>
+          </Link>
+        </>
+      )}
+
+      {/* Ryhmät: kirjautumattomalle selaussivu, kirjautuneelle omat ryhmät */}
       <Link
-        to="/search"
-        className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
-      >
-        <svg
-          className="size-5 fill-none stroke-current"
-          viewBox="0 0 24 24"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="6" />
-          <path d="m16 16 4 4" />
-        </svg>
-        <span className="mt-0.5 text-[10px]">Haku</span>
-      </Link>
-      <Link
-        to="/lists"
-        className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
-      >
-        <svg
-          className="size-5 fill-current"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A5.99 5.99 0 0 1 15.5 4 4.5 4.5 0 0 1 20 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35Z" />
-        </svg>
-        <span className="mt-0.5 text-[10px]">Listat</span>
-      </Link>
-      <Link
-        to="/groups"
+        to={user ? '/groups' : '/groups/browse'}
         className="flex flex-col items-center p-1 text-gray-700 hover:text-indigo-500 dark:text-gray-300 dark:hover:text-indigo-400"
       >
         <svg
@@ -64,6 +72,8 @@ export default function MobileNav({ onOpenAuth }) {
         </svg>
         <span className="mt-0.5 text-[10px]">Ryhmät</span>
       </Link>
+
+      {/* Profiili (kirjautunut) tai Kirjaudu (kirjautumaton) */}
       {user ? (
         <Link
           to="/profile"

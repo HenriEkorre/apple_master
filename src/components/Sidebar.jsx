@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import ProfileEntry from './ProfileEntry'
 import { useAuth } from '../AuthProvider'
+import Logo from './Logo'
 
 export default function Sidebar({ onOpenAuth }) {
   const [collapsed, setCollapsed] = useState(false)
@@ -16,7 +17,7 @@ export default function Sidebar({ onOpenAuth }) {
   const [myGroups, setMyGroups] = useState([])
 
   useEffect(() => {
-  // Ei kirjautunutta käyttäjää: tyhjennetään lista äläkä hae mitään
+    // Ei kirjautunutta käyttäjää: tyhjennetään lista äläkä hae mitään
     if (!user) {
       setMyGroups([])
       return
@@ -49,13 +50,14 @@ export default function Sidebar({ onOpenAuth }) {
       {/* 1. Logo vie etusivulle */}
       <Link
         to="/"
-        className="p-5 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition group cursor-pointer"
+        aria-label="apple_master – etusivu"
+        title="Etusivu"
+        className={`h-[69px] ${collapsed ? 'justify-center px-2' : 'px-5'} border-b border-gray-200 dark:border-gray-800 flex items-center hover:bg-gray-100 dark:hover:bg-gray-800/50 transition group cursor-pointer`}
       >
-        {!collapsed && (
-          <h1 className="text-lg font-bold tracking-wider text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
-            apple_master
-          </h1>
-        )}
+        <Logo
+          collapsed={collapsed}
+          className={`${collapsed ? 'size-9' : 'h-12 w-auto'} text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition`}
+        />
       </Link>
 
       {/* Rullattava pääsisältö */}
@@ -73,66 +75,71 @@ export default function Sidebar({ onOpenAuth }) {
               Ryhmät
             </h3>
           )}
-          
-          <ul className="space-y-1">
-            {/* Omat ryhmät -pääpainike */}
-            <li>
-              <Link
-                to="/groups"
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  isActive('/groups') 
-                    ? 'bg-indigo-600 text-white font-semibold' 
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                }`}
-                title="Omat ryhmät"
-              >
-                <svg
-                  className="size-5 shrink-0 fill-current"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M16 11a4 4 0 1 0-3.99-4A4 4 0 0 0 16 11Zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 13c-2.33 0-7 1.17-7 3.5V19h5v-2c0-1.11.59-2.08 1.51-2.72A7.6 7.6 0 0 1 12 13.18 11.6 11.6 0 0 0 8 13Z" />
-                </svg>
-                {!collapsed && <span>Omat ryhmät</span>}
-              </Link>
-            </li>
-          </ul>
 
-          {/* Omat ryhmät -lista suoraan pääpainikkeen alla (näytetään vain jos sivupalkki ei ole piilotettu) */}
-          {!collapsed && (
-            <div className="pl-2 space-y-1 border-l border-gray-200 dark:border-gray-800 ml-3 my-2">
-              {myGroups.length > 0 ? (
-                myGroups.map((group) => {
-                  const isGroupActive = location.pathname === `/groups/${group.id}`
-
-                  return (
-                    <Link
-                      key={group.id}
-                      to={`/groups/${group.id}`}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs md:text-sm transition group ${
-                        isGroupActive 
-                          ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-500/30' 
-                          : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
-                      }`}
+          {/* Omat ryhmät ja niiden lista: vain kirjautuneelle */}
+          {user && (
+            <>
+              <ul className="space-y-1">
+                {/* Omat ryhmät -pääpainike */}
+                <li>
+                  <Link
+                    to="/groups"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                      isActive('/groups') 
+                        ? 'bg-indigo-600 text-white font-semibold' 
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
+                    title="Omat ryhmät"
+                  >
+                    <svg
+                      className="size-5 shrink-0 fill-current"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
-                      <div className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 transition ${
-                        isGroupActive ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-300 dark:group-hover:bg-gray-700'
-                      }`}>
-                        {group.name ? group.name.charAt(0).toUpperCase() : '?'}
-                      </div>
-                      <span className="truncate">{group.name}</span>
-                    </Link>
-                  )
-                })
-              ) : (
-                <p className="px-3 py-1.5 text-xs text-gray-500 italic">
-                  Ei ryhmäjäsenyyksiä.
-                </p>
+                      <path d="M16 11a4 4 0 1 0-3.99-4A4 4 0 0 0 16 11Zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 13c-2.33 0-7 1.17-7 3.5V19h5v-2c0-1.11.59-2.08 1.51-2.72A7.6 7.6 0 0 1 12 13.18 11.6 11.6 0 0 0 8 13Z" />
+                    </svg>
+                    {!collapsed && <span>Omat ryhmät</span>}
+                  </Link>
+                </li>
+              </ul>
+
+              {/* Omat ryhmät -lista suoraan pääpainikkeen alla (näytetään vain jos sivupalkki ei ole piilotettu) */}
+              {!collapsed && (
+                <div className="pl-2 space-y-1 border-l border-gray-200 dark:border-gray-800 ml-3 my-2">
+                  {myGroups.length > 0 ? (
+                    myGroups.map((group) => {
+                      const isGroupActive = location.pathname === `/groups/${group.id}`
+
+                      return (
+                        <Link
+                          key={group.id}
+                          to={`/groups/${group.id}`}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs md:text-sm transition group ${
+                            isGroupActive 
+                              ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-500/30' 
+                              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold shrink-0 transition ${
+                            isGroupActive ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 group-hover:bg-gray-300 dark:group-hover:bg-gray-700'
+                          }`}>
+                            {group.name ? group.name.charAt(0).toUpperCase() : '?'}
+                          </div>
+                          <span className="truncate">{group.name}</span>
+                        </Link>
+                      )
+                    })
+                  ) : (
+                    <p className="px-3 py-1.5 text-xs text-gray-500 italic">
+                      Ei ryhmäjäsenyyksiä.
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
 
-          {/* Selaa ryhmiä -painike alempana */}
+          {/* Selaa ryhmiä -painike: kaikille */}
           <ul className="space-y-1 mt-1">
             <li>
               <Link
@@ -157,63 +164,68 @@ export default function Sidebar({ onOpenAuth }) {
           </ul>
         </div>
 
-        {/* Elokuvalistat */}
-        <div>
-          {!collapsed && (
-            <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 px-3">
-              Elokuvalistat
-            </h3>
-          )}
-          <ul className="space-y-1">
-            <li>
-              <Link
-                to="/lists"
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  isActive('/lists') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                }`}
-                title="Omat listat"
-              >
-                <svg
-                  className="size-5 shrink-0 fill-current"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h6v-2H7Z" />
-                </svg>
-                {!collapsed && <span>Omat listat</span>}
-              </Link>
-            </li>
-          </ul>
-        </div>
+        {/* Vain kirjautuneelle: elokuvalistat ja arvostelut */}
+        {user && (
+          <>
+            {/* Elokuvalistat */}
+            <div>
+              {!collapsed && (
+                <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 px-3">
+                  Elokuvalistat
+                </h3>
+              )}
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    to="/lists"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                      isActive('/lists') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
+                    title="Omat listat"
+                  >
+                    <svg
+                      className="size-5 shrink-0 fill-current"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 4v2h10V7H7Zm0 4v2h10v-2H7Zm0 4v2h6v-2H7Z" />
+                    </svg>
+                    {!collapsed && <span>Omat listat</span>}
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-        {/* Arvostelut */}
-        <div>
-          {!collapsed && (
-            <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 px-3">
-              Arvostelut
-            </h3>
-          )}
-          <ul className="space-y-1">
-            <li>
-              <Link
-                to="/reviews"
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                  isActive('/reviews') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                }`}
-                title="Arvostelusi"
-              >
-                <svg
-                  className="size-5 shrink-0 fill-current"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                </svg>
-                {!collapsed && <span>Arvostelusi</span>}
-              </Link>
-            </li>
-          </ul>
-        </div>
+            {/* Arvostelut */}
+            <div>
+              {!collapsed && (
+                <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 px-3">
+                  Arvostelut
+                </h3>
+              )}
+              <ul className="space-y-1">
+                <li>
+                  <Link
+                    to="/reviews"
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                      isActive('/reviews') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    }`}
+                    title="Arvostelusi"
+                  >
+                    <svg
+                      className="size-5 shrink-0 fill-current"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    {!collapsed && <span>Arvostelusi</span>}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
