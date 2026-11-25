@@ -3,7 +3,7 @@ import StarRating from './StarRating'
 
 export const MAX_COMMENT_LENGTH = 280
 
-const RATING_LABELS = ['', 'Huono', 'Välttävä', 'Ihan ok', 'Hyvä', 'Erinomainen']
+//const RATING_LABELS = ['', 'Huono', 'Välttävä', 'Ihan ok', 'Hyvä', 'Erinomainen']
 
 export default function ReviewForm({
   initialRating = 0,
@@ -66,7 +66,7 @@ export default function ReviewForm({
             <>
               {rating} / 5
               <span className="ml-2 font-normal text-gray-500 dark:text-gray-400">
-                {RATING_LABELS[rating]}
+                
               </span>
             </>
           ) : (
