@@ -35,6 +35,11 @@ export default function GroupDetail() {
   const [memberError, setMemberError] = useState(null)
   const [busyUserId, setBusyUserId] = useState(null)
 
+  // Ryhmän listat
+  const [groupLists, setGroupLists] = useState([])
+  const [listsLoading, setListsLoading] = useState(false)
+  const [listsError, setListsError] = useState(null)
+
   // Haetaan yksittäisen ryhmän tiedot suoraan backendistä.
   // showSpinner = false, kun päivitetään olemassa olevaa näkymää (ei vilkuta koko sivua)
   const fetchGroupDetail = useCallback(
@@ -64,6 +69,41 @@ export default function GroupDetail() {
   useEffect(() => {
     fetchGroupDetail()
   }, [fetchGroupDetail])
+
+  // Haetaan ryhmän listat (vain jäsenille)
+  const fetchGroupLists = useCallback(async () => {
+    try {
+      setListsLoading(true)
+      setListsError(null)
+      const response = await axios.get(`/api/lists/group/${id}`, {
+        withCredentials: true,
+      })
+      setGroupLists(response.data)
+    } catch (err) {
+      console.error('Virhe ryhmän listojen haussa:', err)
+      setListsError('Ryhmän listojen lataaminen epäonnistui.')
+    } finally {
+      setListsLoading(false)
+    }
+  }, [id])
+
+  const isGroupMember = group?.isMember
+
+  useEffect(() => {
+    // Listat haetaan vain jäsenille
+    if (!isGroupMember) {
+      setGroupLists([])
+      return
+    }
+
+    // Tyhjennetään edellisen ryhmän listat, kun siirrytään ryhmästä toiseen
+    setGroupLists([])
+    fetchGroupLists()
+
+    // Päivitetään lista, kun jokin lista muuttuu (nimi, poisto, elokuvat)
+    window.addEventListener('lists-changed', fetchGroupLists)
+    return () => window.removeEventListener('lists-changed', fetchGroupLists)
+  }, [isGroupMember, fetchGroupLists])
 
   // Suljetaan modaali Escape-näppäimellä
   useEffect(() => {
@@ -494,7 +534,7 @@ export default function GroupDetail() {
                 <button
                   type="submit"
                   disabled={inviting || !inviteUsername.trim()}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 transition cursor-pointer disabled:opacity-50 shrink-0"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer disabled:opacity-50 shrink-0"
                 >
                   {inviting ? 'Lähetetään...' : 'Kutsu'}
                 </button>
@@ -531,16 +571,41 @@ export default function GroupDetail() {
             )}
           </div>
 
-          {group.isMember ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ryhmän listat näkyvät myös Jaetut listat -osiossa.
-            </p>
-          ) : (
+          {!group.isMember ? (
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Ryhmän listat näkyvät vain ryhmän jäsenille.
             </p>
+          ) : listsLoading && groupLists.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Ladataan listoja...
+            </p>
+          ) : listsError ? (
+            <p className="text-sm text-red-700 dark:text-red-300">{listsError}</p>
+          ) : groupLists.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Ryhmällä ei ole vielä listoja.
+              {isAdmin && ' Luo ensimmäinen painamalla "+ Luo lista".'}
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {groupLists.map((list) => (
+                <li key={list.id}>
+                  <Link
+                    to={`/lists/${list.id}`}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-gray-100 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/50 hover:border-indigo-500/60 transition"
+                  >
+                    <span className="font-medium truncate">{list.title}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+                      {list.movie_count === 1
+                        ? '1 elokuva'
+                        : `${list.movie_count ?? 0} elokuvaa`}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>        
+        </div>
       </div>
 
       {/* Poistumisen vahvistusmodaali */}
@@ -593,7 +658,7 @@ export default function GroupDetail() {
                 type="button"
                 onClick={handleLeaveGroup}
                 disabled={leaving || isLastAdminWithOthers}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition cursor-pointer disabled:opacity-50"
               >
                 {leaving
                   ? 'Poistutaan...'
