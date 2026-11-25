@@ -20,8 +20,8 @@ function AppleMark({ strokeWidth }) {
 }
 
 // collapsed = true: pelkkä omenakuvake (pienennetty sivupalkki, mobiili)
-// strokeWidth: omenan viivan paksuus, alkuperäinen 2.7. Jos kuvake näyttää pienenä liian ohuelta, kokeile 4–5.
-export default function Logo({ collapsed = false, className = '', strokeWidth = 2.7 }) {
+
+export default function Logo({ collapsed = false, className = '', strokeWidth = 6 }) {
   if (collapsed) {
     return (
       <svg
@@ -54,8 +54,8 @@ export default function Logo({ collapsed = false, className = '', strokeWidth = 
         dominantBaseline="middle"
         fill="currentColor"
         fontFamily="Segoe UI, Helvetica Neue, Arial, sans-serif"
-        fontSize="76"
-        letterSpacing="1.4"
+        fontSize="100"
+        letterSpacing="2"
       >
         apple_master
       </text>
