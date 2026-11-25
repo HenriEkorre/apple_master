@@ -253,23 +253,36 @@ export default function Header({ onOpenAuth }) {
 
       {/* Teeman vaihto & käyttäjän painikkeet */}
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="rounded-lg p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-        >
+      <button
+        type="button"
+        onClick={toggleTheme}
+        aria-label={theme === 'dark' ? 'Vaihda vaaleaan teemaan' : 'Vaihda tummaan teemaan'}
+        className="group rounded-lg p-2 text-gray-700 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-950 active:scale-95 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+      >
+        {theme === 'dark' ? (
           <svg
-            className="size-5 fill-current"
+            className="size-5 fill-current transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-rotate-12 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
-            {theme === 'dark' ? (
-              <path d="M12.7 2.1a9.5 9.5 0 1 0 9.2 12.1A8 8 0 0 1 12.7 2.1Z" />
-            ) : (
-              <path d="M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1Zm0 16a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1ZM4.93 3.51l1.41 1.42a1 1 0 1 1-1.41 1.41L3.51 4.93a1 1 0 0 1 1.42-1.42ZM17.66 17.66a1 1 0 0 1 1.41 0l1.42 1.41a1 1 0 0 1-1.42 1.42l-1.41-1.42a1 1 0 0 1 0-1.41ZM2 12a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H3a1 1 0 0 1-1-1Zm16 0a1 1 0 0 1 1-1h2a1 1 0 1 1 0 0 1 0 1 0 2h-2a1 1 0 0 1-1-1ZM4.93 20.49a1 1 0 0 1-1.42-1.42l1.42-1.41a1 1 0 1 1 1.41 1.41l-1.41 1.42ZM19.07 3.51a1 1 0 0 1 0 1.42l-1.42 1.41a1 1 0 0 1-1.41-1.41l1.41-1.42ZM12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z" />
-            )}
+            <path d="M12.7 2.1a9.5 9.5 0 1 0 9.2 12.1A8 8 0 0 1 12.7 2.1Z" />
           </svg>
-        </button>
+        ) : (
+          <svg
+            className="size-5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-45 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2.5v2M12 19.5v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2.5 12h2M19.5 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+        )}
+      </button>
+
 
         {user && (
           <button
