@@ -185,6 +185,35 @@ export default function Sidebar({ onOpenAuth }) {
             </li>
           </ul>
         </div>
+
+        {/* Arvostelut */}
+        <div>
+          {!collapsed && (
+            <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3 px-3">
+              Arvostelut
+            </h3>
+          )}
+          <ul className="space-y-1">
+            <li>
+              <Link
+                to="/reviews"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                  isActive('/reviews') ? 'bg-indigo-600 text-white font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                }`}
+                title="Arvostelusi"
+              >
+                <svg
+                  className="size-5 shrink-0 fill-current"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                {!collapsed && <span>Arvostelusi</span>}
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
 
       <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">

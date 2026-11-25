@@ -43,6 +43,34 @@ export const protect = async (req, res, next) => {
   }
 }
 
+// Valinnainen kirjautuminen: jos eväste on voimassa, req.user asetetaan.
+// Jos evästettä ei ole tai se on virheellinen, pyyntö jatkuu ilman käyttäjää (ei 401).
+// Käytetään reiteillä, jotka ovat avoimia kaikille mutta näyttävät kirjautuneelle lisää.
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies?.[cookieName]
+
+    if (token) {
+      const payload = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ['HS256'],
+        issuer: 'apple-master',
+        audience: 'apple-master-web',
+      })
+
+      const result = await pool.query(
+        'SELECT id, username, email FROM users WHERE id = $1',
+        [payload.sub],
+      )
+
+      if (result.rows[0]) req.user = result.rows[0]
+    }
+  } catch {
+    // Vanhentunut tai virheellinen eväste: jatketaan kirjautumattomana
+  }
+
+  next()
+}
+
 export function issueCookie(res, user) {
   // Luodaan JWT ja käytetään ympäristömuuttujassa olevaa salaisuutta (JWT_SECRET) allekirjoittamiseen.
   // JWT sisältää käyttäjän id:n (sub) ja on voimassa 30 minuuttia.

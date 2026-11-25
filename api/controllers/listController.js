@@ -1210,3 +1210,39 @@ export const getSharedLists = async (req, res, next) => {
     return next(error)
   }
 }
+
+// Hae ryhmän listat (vain ryhmän aktiiviset jäsenet)
+export const getGroupLists = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+    const groupId = parseId(req.params.groupId)
+
+    if (!groupId) {
+      return res.status(400).json({ message: 'Virheellinen ryhmän tunnus' })
+    }
+
+    const membership = await pool.query(
+      `SELECT 1 FROM group_members
+       WHERE group_id = $1 AND user_id = $2 AND status = 'active'`,
+      [groupId, userId]
+    )
+    if (membership.rows.length === 0) {
+      return res
+        .status(403)
+        .json({ message: 'Vain ryhmän jäsenet näkevät ryhmän listat' })
+    }
+
+    const result = await pool.query(
+      `SELECT l.*,
+        (SELECT COUNT(*) FROM list_movies lm WHERE lm.list_id = l.id)::int AS movie_count
+       FROM lists l
+       WHERE l.owner_type = 'group' AND l.owner_id = $1
+       ORDER BY l.created_at ASC, l.id ASC`,
+      [groupId]
+    )
+
+    res.status(200).json(result.rows)
+  } catch (error) {
+    next(error)
+  }
+}

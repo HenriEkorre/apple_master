@@ -1,13 +1,20 @@
 import express from 'express'
-import { getMyReviews, createReview } from '../controllers/reviewController.js'
-import { protect } from '../middleware/authMiddleware.js'
+import {
+  getMovieReviews,
+  saveMyReview,
+  deleteMyReview,
+  getMyReviews,
+} from '../controllers/reviewController.js'
+import { protect, optionalAuth } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
 
-// GET /api/reviews/me -> Palauttaa kirjautuneen käyttäjän arvostelut
-router.get('/me', protect, getMyReviews)
+// Luku on avointa kaikille (kirjautunut saa lisäksi oman arvostelunsa)
+router.get('/movie/:tmdbId', optionalAuth, getMovieReviews)
 
-// POST /api/reviews -> Luo uuden arvostelun
-router.post('/', protect, createReview)
+// Luonti/muokkaus ja poisto vaativat kirjautumisen ja koskevat vain omaa arvostelua
+router.put('/movie/:tmdbId', protect, saveMyReview)
+router.delete('/movie/:tmdbId', protect, deleteMyReview)
+router.get('/my', protect, getMyReviews)
 
 export default router
