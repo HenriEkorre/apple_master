@@ -13,6 +13,7 @@ import {
   deleteGroupList,
   addMovieToGroupList,
   removeMovieFromGroupList,
+  getGroupLists
 } from '../controllers/listController.js'
 import { protect } from '../middleware/authMiddleware.js'
 
@@ -22,6 +23,7 @@ router.get('/my', protect, getMyLists)
 router.get('/shared', protect, getSharedLists)
 router.post('/', protect, createList)
 router.post('/groups/:groupId/lists', protect, createGroupList)
+router.get('/group/:groupId', protect, getGroupLists)
 router.patch('/groups/lists/:id', protect, updateGroupList)
 router.delete('/groups/lists/:id', protect, deleteGroupList)
 router.post('/groups/lists/:id/movies', protect, addMovieToGroupList)
