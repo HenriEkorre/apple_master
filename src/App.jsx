@@ -16,6 +16,7 @@ import AuthOverlay from './components/AuthOverlay'
 import Lists from './pages/Lists'
 import ListDetail from './pages/ListDetail'
 import Profile from './pages/Profile'
+import MyReviews from './pages/MyReviews'
 import { useState } from 'react'
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
             <Route path="/lists/:id" element={<ListDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/reviews" element={<MyReviews />} />
             <Route
               path="/test"
               element={
