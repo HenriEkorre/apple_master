@@ -135,31 +135,44 @@ export default function MobileNav({ onOpenAuth }) {
       </Link>
 
       {/* Vain kirjautuneelle: arvostelut ja listat */}
-      {user && (
-        <>
-          <Link
-            ref={(el) => {
-              itemRefs.current.reviews = el
-            }}
-            to="/reviews"
-            aria-current={isReviewsActive ? 'page' : undefined}
-            className={getItemClass(isReviewsActive)}
-          >
-            <svg
-              className={`size-5 fill-current ${getVisualClass(isReviewsActive)}`}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-            </svg>
-            <span
-              className={`mt-0.5 leading-none text-[10px] ${
-                isReviewsActive ? 'font-semibold' : 'font-medium'
-              }`}
-            >
-              Arvostelut
-            </span>
-          </Link>
+{user && (
+  <>
+    <Link
+      ref={(el) => {
+        itemRefs.current.reviews = el
+      }}
+      to="/reviews"
+      aria-current={isReviewsActive ? 'page' : undefined}
+      className={getItemClass(isReviewsActive)}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="75 30 236 230"
+        fill="none"
+        aria-hidden="true"
+        className={`size-5 ${getVisualClass(isReviewsActive)}`}
+      >
+        <g
+          transform="translate(48 16) scale(1.22)"
+          fill="currentColor"
+          stroke="currentColor"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M118 70C108 56 86 50 68 62C42 80 32 108 36 136C42 168 74 192 118 194C162 192 196 168 202 136C206 108 196 80 170 62C152 50 128 56 118 70Z" />
+          <path d="M118 66C122 50 132 40 142 34" />
+          <path d="M142 34C156 18 186 16 198 30C182 36 158 42 144 40Z" />
+        </g>
+      </svg>
+      <span
+        className={`mt-0.5 leading-none text-[10px] ${
+          isReviewsActive ? 'font-semibold' : 'font-medium'
+        }`}
+      >
+        Arvostelut
+      </span>
+    </Link>
 
           <Link
             ref={(el) => {

@@ -21,12 +21,12 @@ function AppleMark({ strokeWidth }) {
 
 // collapsed = true: pelkkä omenakuvake (pienennetty sivupalkki, mobiili)
 
-export default function Logo({ collapsed = false, className = '', strokeWidth = 6 }) {
+export default function Logo({ collapsed = false, className = '', strokeWidth = 7 }) {
   if (collapsed) {
     return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="80 34 226 226"
+        viewBox="75 30 236 230"
         fill="none"
         role="img"
         aria-label="apple_master"

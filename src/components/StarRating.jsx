@@ -1,29 +1,38 @@
 import { useRef, useState } from 'react'
 
-const STAR_PATH =
-  'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'
+const SIZE_CLASSES = {
+  sm: 'size-4',
+  md: 'size-6',
+  lg: 'size-8',
+}
 
-const SIZE_CLASSES = { sm: 'size-4', md: 'size-6', lg: 'size-8' }
-
-function Star({ filled }) {
+function Apple({ filled }) {
   return (
     <svg
-      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="75 30 236 230"
       aria-hidden="true"
-      className={`size-full pointer-events-none ${
-        filled ? 'text-amber-400' : 'text-gray-300 dark:text-gray-600'
+      className={`size-full pointer-events-none transition-colors duration-150 ${
+        filled
+          ? 'text-gray-900 dark:text-white'
+          : 'text-gray-400/75 dark:text-gray-600'
       }`}
       fill={filled ? 'currentColor' : 'none'}
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth={filled ? '7' : '8'}
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d={STAR_PATH} />
+      <g transform="translate(48 16) scale(1.22)">
+        <path d="M118 70C108 56 86 50 68 62C42 80 32 108 36 136C42 168 74 192 118 194C162 192 196 168 202 136C206 108 196 80 170 62C152 50 128 56 118 70Z" />
+        <path d="M118 66C122 50 132 40 142 34" />
+        <path d="M142 34C156 18 186 16 198 30C182 36 158 42 144 40Z" />
+      </g>
     </svg>
   )
 }
 
-// value: 0–5 (kokonaisluku). Jos onChange annetaan, tähdet ovat valittavissa, muuten vain luku.
+// value: 0–5 (kokonaisluku). Jos onChange annetaan, omenat ovat valittavissa, muuten vain luku.
 export default function StarRating({ value = 0, onChange, size = 'md', disabled = false }) {
   const [preview, setPreview] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -36,19 +45,19 @@ export default function StarRating({ value = 0, onChange, size = 'md', disabled 
     return (
       <span
         role="img"
-        aria-label={`${value} / 5 tähteä`}
-        className="inline-flex gap-0.5"
+        aria-label={`${value} / 5 omenaa`}
+        className="inline-flex gap-1"
       >
         {[1, 2, 3, 4, 5].map((n) => (
           <span key={n} className={sizeClass}>
-            <Star filled={n <= rounded} />
+            <Apple filled={n <= rounded} />
           </span>
         ))}
       </span>
     )
   }
 
-  // Laskee kokonaisluvun 1–5 tähtirivin X-koordinaatista
+  // Laskee kokonaisluvun 1–5 rivin X-koordinaatista
   const calcRatingFromClientX = (clientX) => {
     const el = containerRef.current
     if (!el) return value || 1
@@ -125,11 +134,11 @@ export default function StarRating({ value = 0, onChange, size = 'md', disabled 
       ref={containerRef}
       role="slider"
       tabIndex={disabled ? -1 : 0}
-      aria-label="Tähtiarvio"
+      aria-label="Omenaarvio"
       aria-valuemin={1}
       aria-valuemax={5}
       aria-valuenow={value || 0}
-      aria-valuetext={value ? `${value} / 5 tähteä` : 'Ei arviota'}
+      aria-valuetext={value ? `${value} / 5 omenaa` : 'Ei arviota'}
       aria-disabled={disabled}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -137,7 +146,7 @@ export default function StarRating({ value = 0, onChange, size = 'md', disabled 
       onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerLeave}
       onKeyDown={handleKeyDown}
-      className={`inline-flex gap-1.5 py-1 touch-none select-none rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+      className={`inline-flex gap-2 py-1 touch-none select-none rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
       }`}
     >
@@ -148,7 +157,7 @@ export default function StarRating({ value = 0, onChange, size = 'md', disabled 
             !disabled && shown === n && (isDragging || preview > 0) ? 'scale-110' : ''
           }`}
         >
-          <Star filled={n <= shown} />
+          <Apple filled={n <= shown} />
         </span>
       ))}
     </div>

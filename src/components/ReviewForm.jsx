@@ -71,7 +71,7 @@ export default function ReviewForm({
             </>
           ) : (
             <span className="font-normal text-gray-500 dark:text-gray-400">
-              Valitse tähdet
+              Valitse omenat
             </span>
           )}
         </span>
