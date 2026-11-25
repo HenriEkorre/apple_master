@@ -4,6 +4,7 @@ import axios from 'axios'
 import MovieDetailsSkeleton from '../components/MovieDetailsSkeleton'
 import AddToListButton from '../components/AddToListButton'
 import { CalendarIcon, ClockIcon, StarIcon } from '../components/Icons'
+import MovieReviews from '../components/MovieReviews'
 
 export default function MovieDetails() {
   // Nappaa elokuvan ID URL-osoitteesta 
@@ -117,6 +118,9 @@ export default function MovieDetails() {
           </div>
         </div>
       </div>
+
+      {/* Arvostelut */}
+      <MovieReviews movieId={movie.id} />
 
       {/* Elokuvan traileri */}
       {movie.trailer && (
