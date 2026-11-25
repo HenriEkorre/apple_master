@@ -3,6 +3,7 @@ import {
   getMovieReviews,
   saveMyReview,
   deleteMyReview,
+  getMyReviews,
 } from '../controllers/reviewController.js'
 import { protect, optionalAuth } from '../middleware/authMiddleware.js'
 
@@ -14,5 +15,6 @@ router.get('/movie/:tmdbId', optionalAuth, getMovieReviews)
 // Luonti/muokkaus ja poisto vaativat kirjautumisen ja koskevat vain omaa arvostelua
 router.put('/movie/:tmdbId', protect, saveMyReview)
 router.delete('/movie/:tmdbId', protect, deleteMyReview)
+router.get('/my', protect, getMyReviews)
 
 export default router

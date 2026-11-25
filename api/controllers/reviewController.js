@@ -4,6 +4,7 @@ import { pool } from '../models/db.js'
 const MAX_INT = 2147483647
 const MAX_COMMENT_LENGTH = 280
 const MAX_REVIEWS_RETURNED = 50
+const MAX_MY_REVIEWS = 100
 
 // Palauttaa positiivisen kokonaisluvun tai null, jos arvo ei kelpaa
 const parseId = (value) => {
@@ -177,6 +178,67 @@ export const deleteMyReview = async (req, res, next) => {
     }
 
     res.status(200).json({ message: 'Arvostelu poistettiin' })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Hae elokuvan perustiedot TMDB:stä (oman arvostelulistan korteille)
+const fetchMovieSummary = async (tmdbId) => {
+  const response = await axios.get(
+    `https://api.themoviedb.org/3/movie/${tmdbId}`,
+    {
+      params: { api_key: process.env.TMDB_API_KEY, language: 'fi-FI' },
+      timeout: 8000,
+    }
+  )
+  const movie = response.data
+  return {
+    id: movie.id,
+    title: movie.title,
+    poster_path: movie.poster_path,
+    release_date: movie.release_date,
+  }
+}
+
+// Haetaan elokuvat pienissä erissä, jotta TMDB:hen ei lähde sataa pyyntöä kerralla
+const fetchSummariesInChunks = async (ids, chunkSize = 10) => {
+  const results = []
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize)
+    results.push(...(await Promise.allSettled(chunk.map(fetchMovieSummary))))
+  }
+  return results
+}
+
+// Hae kirjautuneen käyttäjän kaikki omat arvostelut elokuvan tietoineen
+export const getMyReviews = async (req, res, next) => {
+  try {
+    const userId = req.user.id
+
+    const result = await pool.query(
+      `SELECT id, tmdb_movie_id, rating, comment, created_at
+       FROM reviews
+       WHERE user_id = $1
+       ORDER BY created_at DESC, id DESC
+       LIMIT $2`,
+      [userId, MAX_MY_REVIEWS]
+    )
+
+    const movies = await fetchSummariesInChunks(
+      result.rows.map((row) => row.tmdb_movie_id)
+    )
+
+    // Jos yhden elokuvan tietoja ei saada, arvostelu näytetään silti paikkamerkillä
+    res.status(200).json(
+      result.rows.map((review, index) => ({
+        ...review,
+        movie:
+          movies[index].status === 'fulfilled'
+            ? movies[index].value
+            : { id: review.tmdb_movie_id, title: null, unavailable: true },
+      }))
+    )
   } catch (error) {
     next(error)
   }
