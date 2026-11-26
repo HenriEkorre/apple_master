@@ -81,7 +81,7 @@ CREATE TABLE reviews (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     tmdb_movie_id INTEGER NOT NULL,
-    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    rating DECIMAL NOT NULL CHECK (rating >= 0.5 AND rating <= 5),
     comment TEXT,
     visibility visibility_type_enum NOT NULL DEFAULT 'public',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
