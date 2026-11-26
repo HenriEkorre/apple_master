@@ -45,7 +45,7 @@ Järjestelmä toteutetaan kolmikerroksisena kontitettuna verkkosovelluksena, jok
 
 Tietokantana toimii PostgreSQL. Järjestelmässä hyödynnetään `movies`-taulua välimuistina TMDB API:sta haettaville elokuville suorituskyvyn optimoimiseksi.
 
-### Database Diagram
+### Tietokantakaavio
 
 ```mermaid
 erDiagram
@@ -69,8 +69,8 @@ erDiagram
 
     group_members {
         int id PK
-        int group_id FK "UK with user_id"
-        int user_id FK "UK with group_id"
+        int group_id FK "unique together with user_id"
+        int user_id FK "unique together with group_id"
         group_role_enum role "admin | member"
         member_status_enum status "active | pending"
     }
@@ -79,42 +79,87 @@ erDiagram
         int id PK
         varchar title
         owner_type_enum owner_type "user | group"
-        int owner_id "polymorphic, no FK"
+        int owner_id "polymorphic, no foreign key"
+        visibility_type_enum visibility "private | shared | public"
         boolean is_public_link
         timestamptz created_at
     }
 
+    list_groups {
+        int list_id PK, FK "composite primary key with group_id"
+        int group_id PK, FK "composite primary key with list_id"
+        timestamptz shared_at
+    }
+
     list_movies {
         int id PK
-        int list_id FK "UK with tmdb_movie_id"
-        int tmdb_movie_id "UK with list_id"
+        int list_id FK "unique together with tmdb_movie_id"
+        int tmdb_movie_id "unique together with list_id"
         int added_by FK
         timestamptz added_at
     }
 
     reviews {
         int id PK
-        int user_id FK "UK with tmdb_movie_id"
-        int tmdb_movie_id "UK with user_id"
-        int rating "CHECK 1-5"
+        int user_id FK "unique together with tmdb_movie_id"
+        int tmdb_movie_id "unique together with user_id"
+        int rating "CHECK constraint 1-5"
         text comment
-        visibility_type_enum visibility "private | group | public"
+        visibility_type_enum visibility "private | shared | public"
         timestamptz created_at
     }
 
-    users ||--o{ groups : creates
-    users ||--o{ group_members : joins
-    groups ||--o{ group_members : has
-    lists ||--o{ list_movies : contains
-    users ||--o{ list_movies : adds
-    users ||--o{ reviews : writes
-    users |o..o{ lists : "owns (owner_type=user)"
-    groups |o..o{ lists : "owns (owner_type=group)"
+    users ||--o{ groups : "creates"
+    users ||--o{ group_members : "joins"
+    groups ||--o{ group_members : "contains"
+    users |o..o{ lists : "owns when owner_type=user"
+    groups |o..o{ lists : "owns when owner_type=group"
+    lists ||--o{ list_groups : "is shared with"
+    groups ||--o{ list_groups : "receives shared lists"
+    lists ||--o{ list_movies : "contains"
+    users ||--o{ list_movies : "adds"
+    users ||--o{ reviews : "writes"
 ```
+
+
+### Listan näkyvyyden CHECK-rajoite
+
+Seuraava rajoite määrittää listan omistajatyypin ja näkyvyyden sallitut yhdistelmät:
+
+```sql
+CONSTRAINT chk_list_owner_visibility
+CHECK (
+  (
+    owner_type = 'user'
+    AND visibility IN ('private', 'shared', 'public')
+  )
+  OR
+  (
+    owner_type = 'group'
+    AND visibility IN ('private', 'public')
+  )
+)
+```
+
+Rajoite sallii käyttäjän omistamalle listalle seuraavat näkyvyysarvot:
+
+- `private`: lista näkyy vain omistajalle
+- `shared`: lista näkyy omistajalle ja valittujen ryhmien jäsenille
+- `public`: lista on julkinen
+
+Rajoite sallii ryhmän omistamalle listalle seuraavat näkyvyysarvot:
+
+- `private`: lista näkyy vain ryhmän jäsenille
+- `public`: lista on julkinen
+
+Rajoite estää ryhmän omistamaa listaa käyttämästä `shared`-näkyvyysarvoa.
+
+`list_groups`-taulua käytetään vain silloin, kun käyttäjän omistama lista jaetaan yhdelle tai useammalle ryhmälle. Ryhmän omistaman listan ryhmä määritetään edelleen `lists.owner_id`-kentässä.
+
 
 ---
 
-## 4. Käyttöliittymäsuunnittelu Teknissellä Tasolla
+## 4. Käyttöliittymäsuunnittelu Teknisellä Tasolla
 
 Käyttöliittymä toteutetaan yksisivuisena sovelluksena (Single Page Application, SPA) Reactilla.
 

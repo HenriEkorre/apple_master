@@ -45,26 +45,44 @@ Kaveriporukoille ja elokuvaharrastajille elokuvat ovat yhteinen harrastus, mutta
 
 ```mermaid
 graph TD
-    Visitor[Kirjautumaton kavijä]
-    User[Rekisteroitynyt käyttajä]
-    Admin[Ryhmän yllapitäjä]
+    Visitor[Kirjautumaton kävijä]
+    User[Rekisteröitynyt käyttäjä]
+    Admin[Ryhmän ylläpitäjä]
 
     Visitor --> User
     User --> Admin
 
     subgraph Elokuvasovellus
         direction TB
+
         Search[Selaa elokuvia ja teatteriesityksiä]
         ViewPublic[Tarkastele julkisia listoja]
-        ManageLists[Luo omia toivelistoja]
+
+        ManageLists[Luo ja hallitse omia toivelistoja]
+        SelectVisibility[Valitse listan näkyvyys]
+        SelectGroups[Valitse yksi tai useampi ryhmä]
+        EditSharing[Muuta listan näkyvyyttä ja valittuja ryhmiä]
+        DeleteOwnList[Poista oma toivelista]
+
         GroupChat[Keskustele ryhmien chatissa]
         ManageGroups[Luo ryhmiä ja hae ryhmiin]
-        ParticipateGroup[Osallistu ryhmän listoille]
+        ParticipateGroup[Tarkastele ryhmälle jaettuja listoja]
         ReviewMovie[Anna tähtiä ja arvostelu]
         ManageOwnMembership[Poistu ryhmästä]
+
         AdminActions[Kutsu ihmisiä ryhmään tai poista ryhmästä]
         AdminContent[Muokkaa ryhmän listoja]
-        AdminRights[Jaa ylläpitäjaoikeuksia]
+        AdminVisibility[Muuta ryhmän listan näkyvyyttä]
+        DeleteGroupList[Poista ryhmän lista]
+        AdminRights[Jaa ylläpitäjäoikeuksia]
+
+        ManageLists --> SelectVisibility
+        SelectVisibility --> SelectGroups
+        ManageLists --> EditSharing
+        ManageLists --> DeleteOwnList
+
+        AdminContent --> AdminVisibility
+        AdminContent --> DeleteGroupList
     end
 
     Visitor --> Search

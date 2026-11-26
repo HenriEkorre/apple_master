@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import MovieCard from '../components/MovieCard'
+import EditListSharingModal from '../components/EditListSharingModal'
 import { CloseIcon } from '../components/Icons'
 
 export default function ListDetail() {
@@ -22,6 +23,9 @@ export default function ListDetail() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+
+  // Listan näkyvyyden ja ryhmäjakojen muokkaus
+  const [isSharingModalOpen, setIsSharingModalOpen] = useState(false)
 
   // Elokuvan poisto listalta
   const [removingId, setRemovingId] = useState(null)
@@ -46,6 +50,7 @@ export default function ListDetail() {
         setResults([])
         setIsRenaming(false)
         setIsDeleteModalOpen(false)
+        setIsSharingModalOpen(false)
         const response = await axios.get(`/api/lists/${id}`, {
           withCredentials: true,
         })
@@ -76,16 +81,13 @@ export default function ListDetail() {
   useEffect(() => {
     const trimmed = query.trim()
 
-    if (trimmed.length < 2) {
-      setResults([])
-      setSearching(false)
-      return
-    }
+    if (trimmed.length < 2) return undefined
 
     let cancelled = false
-    setSearching(true)
 
     const timer = setTimeout(async () => {
+      setSearching(true)
+
       try {
         const response = await axios.get(
           `/api/movies/search?q=${encodeURIComponent(trimmed)}`,
@@ -112,7 +114,10 @@ export default function ListDetail() {
     if (!isDeleteModalOpen) return
 
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !deleting) closeDeleteModal()
+      if (e.key === 'Escape' && !deleting) {
+        setIsDeleteModalOpen(false)
+        setDeleteError(null)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -166,6 +171,16 @@ export default function ListDetail() {
     } finally {
       setSavingTitle(false)
     }
+  }
+
+  // Päivitetään listan näkyvyys ja ryhmäjaot ilman uutta hakupyyntöä
+  const handleSharingUpdated = (updatedList) => {
+    setList((previousList) => ({
+      ...previousList,
+      visibility: updatedList.visibility,
+      groups: updatedList.groups || [],
+      can_manage: updatedList.can_manage ?? previousList.can_manage,
+    }))
   }
 
   // --- Koko listan poisto ---
@@ -348,111 +363,141 @@ export default function ListDetail() {
                   ? '1 elokuva'
                   : `${list.movies.length} elokuvaa`}
               </p>
+              {/* Käyttäjän omistaman listan näkyvyys ja valitut ryhmät */}
+              {list.owner_type === 'user' && (
+                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  <p>
+                    {list.visibility === 'shared'
+                      ? 'Jaettu ryhmille'
+                      : 'Vain minulle'}
+                  </p>
+
+                  {list.visibility === 'shared' && list.groups?.length > 0 && (
+                    <p className="mt-1">
+                      {list.groups.map((group) => group.name).join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="flex gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={startRename}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition cursor-pointer"
-              >
-                Nimeä uudelleen
-              </button>
-              <button
-                type="button"
-                onClick={openDeleteModal}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition cursor-pointer"
-              >
-                Poista lista
-              </button>
-            </div>
+            {list.can_manage && (
+              <div className="flex flex-wrap gap-2 shrink-0">
+                {/* Vain käyttäjän omistaman listan omistaja voi muuttaa ryhmäjakoja */}
+                {list.owner_type === 'user' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSharingModalOpen(true)}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition cursor-pointer"
+                  >
+                    Muokkaa näkyvyyttä
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={startRename}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white transition cursor-pointer"
+                >
+                  Nimeä uudelleen
+                </button>
+                <button
+                  type="button"
+                  onClick={openDeleteModal}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 hover:bg-red-500/30 transition cursor-pointer"
+                >
+                  Poista lista
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Elokuvan lisäys hakemalla */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
-        <label
-          htmlFor="add-movie"
-          className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2"
-        >
-          Lisää elokuva listalle
-        </label>
-        <input
-          id="add-movie"
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value)
-            setSearchError(null)
-          }}
-          placeholder="Hae elokuvaa nimellä..."
-          className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
-        />
+      {list.can_manage && (
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-6">
+          <label
+            htmlFor="add-movie"
+            className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2"
+          >
+            Lisää elokuva listalle
+          </label>
+          <input
+            id="add-movie"
+            type="text"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSearchError(null)
+            }}
+            placeholder="Hae elokuvaa nimellä..."
+            className="w-full px-3.5 py-2.5 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:outline-none focus:border-indigo-500"
+          />
 
-        {searchError && (
-          <p className="mt-2 text-xs text-red-600 dark:text-red-300">{searchError}</p>
-        )}
+          {searchError && (
+            <p className="mt-2 text-xs text-red-600 dark:text-red-300">{searchError}</p>
+          )}
 
-        {showResults && (
-          <div className="mt-3">
-            {searching ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Haetaan...</p>
-            ) : results.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Ei hakutuloksia.
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {results.map((movie) => {
-                  const alreadyInList = movieIdsInList.has(movie.id)
+          {showResults && (
+            <div className="mt-3">
+              {searching ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Haetaan...</p>
+              ) : results.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Ei hakutuloksia.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {results.map((movie) => {
+                    const alreadyInList = movieIdsInList.has(movie.id)
 
-                  return (
-                    <li
-                      key={movie.id}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/50"
-                    >
-                      {movie.poster_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                          alt=""
-                          className="w-10 h-14 object-cover rounded shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-14 rounded bg-gray-200 dark:bg-gray-700 shrink-0" />
-                      )}
+                    return (
+                      <li
+                        key={movie.id}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700/50"
+                      >
+                        {movie.poster_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                            alt=""
+                            className="w-10 h-14 object-cover rounded shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-14 rounded bg-gray-200 dark:bg-gray-700 shrink-0" />
+                        )}
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{movie.title}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {movie.release_date
-                            ? movie.release_date.split('-')[0]
-                            : 'Ei vuotta'}
-                        </p>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">{movie.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {movie.release_date
+                              ? movie.release_date.split('-')[0]
+                              : 'Ei vuotta'}
+                          </p>
+                        </div>
 
-                      {alreadyInList ? (
-                        <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">
-                          Listalla
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleAddMovie(movie)}
-                          disabled={addingId === movie.id}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer disabled:opacity-50 shrink-0"
-                        >
-                          {addingId === movie.id ? 'Lisätään...' : '+ Lisää'}
-                        </button>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+                        {alreadyInList ? (
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold shrink-0">
+                            Listalla
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleAddMovie(movie)}
+                            disabled={addingId === movie.id}
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition cursor-pointer disabled:opacity-50 shrink-0"
+                          >
+                            {addingId === movie.id ? 'Lisätään...' : '+ Lisää'}
+                          </button>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {actionError && (
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 text-red-700 dark:text-red-300 text-xs rounded-xl">
@@ -477,15 +522,19 @@ export default function ListDetail() {
                 <MovieCard movie={movie} />
               )}
 
-              <button
-                type="button"
-                onClick={() => handleRemoveMovie(movie)}
-                disabled={removingId === movie.id}
-                aria-label={`Poista ${movie.title || 'elokuva'} listalta`}
-                className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg text-xs font-semibold bg-black/70 hover:bg-red-600 text-white transition cursor-pointer disabled:opacity-50"
-              >
-                {removingId === movie.id ? '...' : <><CloseIcon className="inline size-3.5 mr-1" /> Poista</>}
-              </button>
+              {list.can_manage && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMovie(movie)}
+                  disabled={removingId === movie.id}
+                  aria-label={`Poista ${movie.title || 'elokuva'} listalta`}
+                  className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg text-xs font-semibold bg-black/70 hover:bg-red-600 text-white transition cursor-pointer disabled:opacity-50"
+                >
+                  {removingId === movie.id
+                    ? '...'
+                    : <><CloseIcon className="inline size-3.5 mr-1" /> Poista</>}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -542,6 +591,13 @@ export default function ListDetail() {
           </div>
         </div>
       )}
+
+      <EditListSharingModal
+        list={list}
+        isOpen={isSharingModalOpen}
+        onClose={() => setIsSharingModalOpen(false)}
+        onSharingUpdated={handleSharingUpdated}
+      />
     </div>
   )
 }

@@ -92,38 +92,161 @@ export const getMyLists = async (req, res, next) => {
 
 // Luo uusi toivelista kirjautuneelle käyttäjälle
 export const createList = async (req, res, next) => {
+  const userId = req.user.id
+  const {
+    title,
+    visibility = 'private',
+    groupIds = [],
+  } = req.body
+
+  // Nimen pitää olla merkkijono
+  if (typeof title !== 'string') {
+    return res.status(400).json({
+      message: 'Listan nimi on pakollinen',
+    })
+  }
+
+  // Tyhjää nimeä ei hyväksytä (myöskään pelkkiä välilyöntejä)
+  const trimmedTitle = title.trim()
+
+  if (!trimmedTitle) {
+    return res.status(400).json({
+      message: 'Listan nimi ei voi olla tyhjä',
+    })
+  }
+
+  if (trimmedTitle.length > MAX_TITLE_LENGTH) {
+    return res.status(400).json({
+      message: `Listan nimi voi olla enintään ${MAX_TITLE_LENGTH} merkkiä`,
+    })
+  }
+
+  // Käyttäjän listalle sallitaan tässä vaiheessa private ja shared
+  if (!['private', 'shared'].includes(visibility)) {
+    return res.status(400).json({
+      message: 'Virheellinen listan näkyvyys',
+    })
+  }
+
+  if (!Array.isArray(groupIds)) {
+    return res.status(400).json({
+      message: 'Ryhmien tunnusten pitää olla taulukossa',
+    })
+  }
+
+  // Muutetaan ryhmien tunnukset numeroiksi ja tarkistetaan niiden kelvollisuus
+  const parsedGroupIds = groupIds.map(parseId)
+
+  if (parsedGroupIds.some((groupId) => groupId === null)) {
+    return res.status(400).json({
+      message: 'Virheellinen ryhmän tunnus',
+    })
+  }
+
+  // Sama ryhmä saa esiintyä pyynnössä vain kerran
+  const uniqueGroupIds = [...new Set(parsedGroupIds)]
+
+  if (uniqueGroupIds.length !== parsedGroupIds.length) {
+    return res.status(400).json({
+      message: 'Sama ryhmä on valittu useammin kuin kerran',
+    })
+  }
+
+  if (visibility === 'shared' && uniqueGroupIds.length === 0) {
+    return res.status(400).json({
+      message: 'Valitse vähintään yksi ryhmä',
+    })
+  }
+
+  // Yksityiselle listalle ei tallenneta ryhmäjakoja
+  const selectedGroupIds =
+    visibility === 'shared'
+      ? uniqueGroupIds
+      : []
+
+  let client
+
   try {
-    const userId = req.user.id
-    const { title } = req.body
+    client = await pool.connect()
+    await client.query('BEGIN')
 
-    // Nimen pitää olla merkkijono
-    if (typeof title !== 'string') {
-      return res.status(400).json({ message: 'Listan nimi on pakollinen' })
+    if (visibility === 'shared') {
+      // Tarkistetaan, että käyttäjä on jokaisen valitun ryhmän aktiivinen jäsen
+      const membershipsResult = await client.query(
+        `SELECT group_id
+         FROM group_members
+         WHERE user_id = $1
+           AND status = 'active'
+           AND group_id = ANY($2::int[])`,
+        [userId, selectedGroupIds]
+      )
+
+      const activeGroupIds = new Set(
+        membershipsResult.rows.map((row) => row.group_id)
+      )
+
+      const belongsToEveryGroup = selectedGroupIds.every(
+        (groupId) => activeGroupIds.has(groupId)
+      )
+
+      if (!belongsToEveryGroup) {
+        await client.query('ROLLBACK')
+
+        return res.status(403).json({
+          message: 'Et kuulu kaikkiin valittuihin ryhmiin',
+        })
+      }
     }
 
-    // Tyhjää nimeä ei hyväksytä (myöskään pelkkiä välilyöntejä)
-    const trimmedTitle = title.trim()
-
-    if (!trimmedTitle) {
-      return res.status(400).json({ message: 'Listan nimi ei voi olla tyhjä' })
-    }
-
-    if (trimmedTitle.length > MAX_TITLE_LENGTH) {
-      return res.status(400).json({
-        message: `Listan nimi voi olla enintään ${MAX_TITLE_LENGTH} merkkiä`,
-      })
-    }
-
-    const result = await pool.query(
-      `INSERT INTO lists (title, owner_type, owner_id)
-       VALUES ($1, 'user', $2)
+    // Lista säilyy käyttäjän omistamana myös silloin, kun se jaetaan ryhmille
+    const listResult = await client.query(
+      `INSERT INTO lists (
+         title,
+         owner_type,
+         owner_id,
+         visibility
+       )
+       VALUES ($1, 'user', $2, $3)
        RETURNING *`,
-      [trimmedTitle, userId],
+      [trimmedTitle, userId, visibility]
     )
 
-    res.status(201).json({ ...result.rows[0], movie_count: 0 })
+    const newList = listResult.rows[0]
+
+    if (visibility === 'shared') {
+      // Lisätään kaikki ryhmäjaot yhdellä kyselyllä
+      await client.query(
+        `INSERT INTO list_groups (
+           list_id,
+           group_id
+         )
+         SELECT $1, UNNEST($2::int[])`,
+        [newList.id, selectedGroupIds]
+      )
+    }
+
+    await client.query('COMMIT')
+
+    return res.status(201).json({
+      ...newList,
+      movie_count: 0,
+      group_ids: selectedGroupIds,
+    })
   } catch (error) {
-    next(error)
+    if (client) {
+      try {
+        await client.query('ROLLBACK')
+      } catch (rollbackError) {
+        console.error(
+          'Listan luonnin rollback epäonnistui:',
+          rollbackError
+        )
+      }
+    }
+
+    return next(error)
+  } finally {
+    client?.release()
   }
 }
 
@@ -139,27 +262,69 @@ export const getListById = async (req, res, next) => {
       })
     }
 
+    /*
+     * Käyttäjä saa nähdä listan, jos:
+     *
+     * 1. käyttäjä omistaa käyttäjälistan
+     * 2. käyttäjä on ryhmän omistaman listan aktiivinen jäsen
+     * 3. käyttäjälista on jaettu käyttäjän aktiiviseen ryhmään
+     * 4. lista on julkinen
+     */
     const listResult = await pool.query(
-      `
-      SELECT DISTINCT l.*
-      FROM lists l
-      LEFT JOIN group_members gm
-        ON gm.group_id = l.owner_id
-      WHERE l.id = $1
-        AND (
-          (
-            l.owner_type = 'user'
-            AND l.owner_id = $2
-          )
-          OR
-          (
-            l.owner_type = 'group'
-            AND gm.user_id = $2
-            AND gm.status = 'active'
-          )
-        )
-      `,
-      [listId, userId],
+      `SELECT
+         l.*,
+         CASE
+           WHEN l.owner_type = 'user'
+             AND l.owner_id = $2
+             THEN true
+           WHEN l.owner_type = 'group'
+             AND EXISTS (
+               SELECT 1
+               FROM group_members admin_gm
+               WHERE admin_gm.group_id = l.owner_id
+                 AND admin_gm.user_id = $2
+                 AND admin_gm.role = 'admin'
+                 AND admin_gm.status = 'active'
+             )
+             THEN true
+           ELSE false
+         END AS can_manage
+       FROM lists l
+       WHERE l.id = $1
+         AND (
+           (
+             l.owner_type = 'user'
+             AND l.owner_id = $2
+           )
+           OR
+           (
+             l.owner_type = 'group'
+             AND EXISTS (
+               SELECT 1
+               FROM group_members gm
+               WHERE gm.group_id = l.owner_id
+                 AND gm.user_id = $2
+                 AND gm.status = 'active'
+             )
+           )
+           OR
+           (
+             l.owner_type = 'user'
+             AND l.visibility = 'shared'
+             AND EXISTS (
+               SELECT 1
+               FROM list_groups lg
+               JOIN group_members gm
+                 ON gm.group_id = lg.group_id
+               WHERE lg.list_id = l.id
+                 AND gm.user_id = $2
+                 AND gm.status = 'active'
+             )
+           )
+           OR
+           l.visibility = 'public'
+         )`,
+      [listId, userId]
     )
 
     const list = listResult.rows[0]
@@ -170,25 +335,50 @@ export const getListById = async (req, res, next) => {
       })
     }
 
+    // Omistaja näkee kaikki jakoryhmät.
+    // Muu katselija näkee vain ryhmät, joissa hän on aktiivinen jäsen.
+    const groupsResult = await pool.query(
+      `SELECT DISTINCT
+     g.id,
+     g.name
+   FROM list_groups lg
+   JOIN groups g
+     ON g.id = lg.group_id
+   WHERE lg.list_id = $1
+     AND (
+       $3::boolean = true
+       OR EXISTS (
+         SELECT 1
+         FROM group_members gm
+         WHERE gm.group_id = lg.group_id
+           AND gm.user_id = $2
+           AND gm.status = 'active'
+       )
+     )
+   ORDER BY g.name ASC, g.id ASC`,
+      [listId, userId, list.can_manage],
+    )
+
     // Uusimmat elokuvat ensin
     const moviesResult = await pool.query(
       `SELECT tmdb_movie_id
        FROM list_movies
        WHERE list_id = $1
        ORDER BY added_at DESC, id DESC`,
-      [listId],
+      [listId]
     )
 
     const movies = await fetchMovieSummaries(
-      moviesResult.rows.map((row) => row.tmdb_movie_id),
+      moviesResult.rows.map((row) => row.tmdb_movie_id)
     )
 
-    res.status(200).json({
+    return res.status(200).json({
       ...list,
+      groups: groupsResult.rows,
       movies,
     })
   } catch (error) {
-    next(error)
+    return next(error)
   }
 }
 
@@ -330,6 +520,186 @@ export const updateList = async (req, res, next) => {
     res.status(200).json(result.rows[0])
   } catch (error) {
     next(error)
+  }
+}
+
+// Muuta käyttäjän omistaman listan näkyvyyttä ja valittuja ryhmiä
+export const updateListSharing = async (req, res, next) => {
+  const userId = req.user.id
+  const listId = parseId(req.params.id)
+  const {
+    visibility,
+    groupIds = [],
+  } = req.body
+
+  if (!listId) {
+    return res.status(400).json({
+      message: 'Virheellinen listan tunnus',
+    })
+  }
+
+  // Käyttäjän listalle sallitaan tässä vaiheessa private ja shared
+  if (!['private', 'shared'].includes(visibility)) {
+    return res.status(400).json({
+      message: 'Virheellinen listan näkyvyys',
+    })
+  }
+
+  if (!Array.isArray(groupIds)) {
+    return res.status(400).json({
+      message: 'Ryhmien tunnusten pitää olla taulukossa',
+    })
+  }
+
+  // Muutetaan ryhmien tunnukset numeroiksi ja tarkistetaan niiden kelvollisuus
+  const parsedGroupIds = groupIds.map(parseId)
+
+  if (parsedGroupIds.some((groupId) => groupId === null)) {
+    return res.status(400).json({
+      message: 'Virheellinen ryhmän tunnus',
+    })
+  }
+
+  // Sama ryhmä saa esiintyä pyynnössä vain kerran
+  const uniqueGroupIds = [...new Set(parsedGroupIds)]
+
+  if (uniqueGroupIds.length !== parsedGroupIds.length) {
+    return res.status(400).json({
+      message: 'Sama ryhmä on valittu useammin kuin kerran',
+    })
+  }
+
+  if (visibility === 'shared' && uniqueGroupIds.length === 0) {
+    return res.status(400).json({
+      message: 'Valitse vähintään yksi ryhmä',
+    })
+  }
+
+  // Yksityiselle listalle ei tallenneta ryhmäjakoja
+  const selectedGroupIds =
+    visibility === 'shared'
+      ? uniqueGroupIds
+      : []
+
+  let client
+
+  try {
+    client = await pool.connect()
+    await client.query('BEGIN')
+
+    // Vain käyttäjän omistamaa henkilökohtaista listaa voi jakaa
+    const listResult = await client.query(
+      `SELECT id, title, owner_type, owner_id, visibility
+       FROM lists
+       WHERE id = $1
+         AND owner_type = 'user'
+         AND owner_id = $2
+       FOR UPDATE`,
+      [listId, userId]
+    )
+
+    if (listResult.rows.length === 0) {
+      await client.query('ROLLBACK')
+
+      return res.status(404).json({
+        message: 'Listaa ei löytynyt',
+      })
+    }
+
+    if (visibility === 'shared') {
+      // Tarkistetaan, että käyttäjä on jokaisen valitun ryhmän aktiivinen jäsen
+      const membershipsResult = await client.query(
+        `SELECT group_id
+         FROM group_members
+         WHERE user_id = $1
+           AND status = 'active'
+           AND group_id = ANY($2::int[])`,
+        [userId, selectedGroupIds]
+      )
+
+      const activeGroupIds = new Set(
+        membershipsResult.rows.map((row) => row.group_id)
+      )
+
+      const belongsToEveryGroup = selectedGroupIds.every(
+        (groupId) => activeGroupIds.has(groupId)
+      )
+
+      if (!belongsToEveryGroup) {
+        await client.query('ROLLBACK')
+
+        return res.status(403).json({
+          message: 'Et kuulu kaikkiin valittuihin ryhmiin',
+        })
+      }
+    }
+
+    // Päivitetään listan näkyvyys
+    const updatedListResult = await client.query(
+      `UPDATE lists
+       SET visibility = $1
+       WHERE id = $2
+         AND owner_type = 'user'
+         AND owner_id = $3
+       RETURNING *`,
+      [visibility, listId, userId]
+    )
+
+    // Poistetaan vanhat ryhmäjaot myös silloin, kun lista muutetaan yksityiseksi
+    await client.query(
+      `DELETE FROM list_groups
+       WHERE list_id = $1`,
+      [listId]
+    )
+
+    if (visibility === 'shared') {
+      // Tallennetaan pyynnössä valitut ryhmät uusiksi ryhmäjaoiksi
+      await client.query(
+        `INSERT INTO list_groups (
+           list_id,
+           group_id
+         )
+         SELECT $1, UNNEST($2::int[])`,
+        [listId, selectedGroupIds]
+      )
+    }
+
+    // Haetaan vastaukseen päivitettyjen ryhmien nimet
+    const groupsResult = await client.query(
+      `SELECT
+         g.id,
+         g.name
+       FROM list_groups lg
+       JOIN groups g
+         ON g.id = lg.group_id
+       WHERE lg.list_id = $1
+       ORDER BY g.name ASC, g.id ASC`,
+      [listId]
+    )
+
+    await client.query('COMMIT')
+
+    return res.status(200).json({
+      ...updatedListResult.rows[0],
+      groups: groupsResult.rows,
+      group_ids: selectedGroupIds,
+      can_manage: true,
+    })
+  } catch (error) {
+    if (client) {
+      try {
+        await client.query('ROLLBACK')
+      } catch (rollbackError) {
+        console.error(
+          'Listan näkyvyyden rollback epäonnistui:',
+          rollbackError
+        )
+      }
+    }
+
+    return next(error)
+  } finally {
+    client?.release()
   }
 }
 
@@ -754,37 +1124,90 @@ export const deleteGroupList = async (req, res, next) => {
   }
 }
 
-// Hae käyttäjälle ryhmien kautta jaetut listat
+// Hae käyttäjälle ryhmien kautta näkyvät listat
 export const getSharedLists = async (req, res, next) => {
   try {
     const userId = req.user.id
 
     const result = await pool.query(
       `
-      SELECT
-        l.*,
-        g.name AS group_name,
-        (
-          SELECT COUNT(*)
-          FROM list_movies lm
-          WHERE lm.list_id = l.id
-        )::int AS movie_count
-      FROM lists l
-      JOIN groups g
-        ON g.id = l.owner_id
-      JOIN group_members gm
-        ON gm.group_id = g.id
-      WHERE l.owner_type = 'group'
-        AND gm.user_id = $1
-        AND gm.status = 'active'
-      ORDER BY l.created_at ASC, l.id ASC
+      SELECT *
+      FROM (
+        /*
+         * Ryhmän omistamat listat.
+         *
+         * Lista näkyy käyttäjälle, kun käyttäjä on omistajaryhmän
+         * aktiivinen jäsen.
+         */
+        SELECT
+          l.*,
+          g.name AS group_name,
+          NULL::varchar AS owner_name,
+          true AS is_group_owned,
+          (
+            SELECT COUNT(*)
+            FROM list_movies lm
+            WHERE lm.list_id = l.id
+          )::int AS movie_count
+        FROM lists l
+        JOIN groups g
+          ON g.id = l.owner_id
+        JOIN group_members gm
+          ON gm.group_id = g.id
+        WHERE l.owner_type = 'group'
+          AND gm.user_id = $1
+          AND gm.status = 'active'
+
+        UNION ALL
+
+        /*
+         * Käyttäjien omistamat shared-listat.
+         *
+         * Lista näkyy käyttäjälle, kun se on jaettu vähintään
+         * yhteen ryhmään, jossa käyttäjä on aktiivinen jäsen.
+         */
+        SELECT
+          l.*,
+          STRING_AGG(
+            DISTINCT g.name,
+            ', '
+            ORDER BY g.name
+          ) AS group_name,
+          u.username AS owner_name,
+          false AS is_group_owned,
+          (
+            SELECT COUNT(*)
+            FROM list_movies lm
+            WHERE lm.list_id = l.id
+          )::int AS movie_count
+        FROM lists l
+        JOIN users u
+          ON u.id = l.owner_id
+        JOIN list_groups lg
+          ON lg.list_id = l.id
+        JOIN groups g
+          ON g.id = lg.group_id
+        JOIN group_members gm
+          ON gm.group_id = lg.group_id
+        WHERE l.owner_type = 'user'
+          AND l.visibility = 'shared'
+          AND l.owner_id <> $1
+          AND gm.user_id = $1
+          AND gm.status = 'active'
+        GROUP BY
+          l.id,
+          u.username
+      ) AS shared_lists
+      ORDER BY
+        shared_lists.created_at ASC,
+        shared_lists.id ASC
       `,
       [userId],
     )
 
-    res.status(200).json(result.rows)
+    return res.status(200).json(result.rows)
   } catch (error) {
-    next(error)
+    return next(error)
   }
 }
 
