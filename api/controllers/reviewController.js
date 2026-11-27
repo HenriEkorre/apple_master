@@ -243,3 +243,42 @@ export const getMyReviews = async (req, res, next) => {
     next(error)
   }
 }
+
+// Hae elokuvan arvostelut vain niiltä käyttäjiltä, jotka ovat samoissa ryhmissä kirjautuneen käyttäjän kanssa
+export const getGroupMovieReviews = async (req, res, next) => {
+  try {
+    const currentUserId = req.user.id
+    const tmdbId = parseId(req.params.tmdbId)
+
+    if (!tmdbId) {
+      return res.status(400).json({ message: 'Virheellinen elokuvan tunnus' })
+    }
+
+    const result = await pool.query(
+      `SELECT DISTINCT
+              r.id,
+              r.rating,
+              r.comment,
+              r.visibility,
+              r.created_at,
+              u.id AS user_id,
+              u.username
+       FROM reviews r
+       JOIN users u ON u.id = r.user_id
+       JOIN group_members gm_other ON gm_other.user_id = r.user_id
+       JOIN group_members gm_me ON gm_me.group_id = gm_other.group_id
+       WHERE r.tmdb_movie_id = $1
+         AND gm_me.user_id = $2
+         AND (r.visibility = 'public' OR r.user_id = $2)
+       ORDER BY r.created_at DESC, r.id DESC
+       LIMIT $3`,
+      [tmdbId, currentUserId, MAX_REVIEWS_RETURNED]
+    )
+
+    res.status(200).json({
+      reviews: result.rows,
+    })
+  } catch (error) {
+    next(error)
+  }
+}
