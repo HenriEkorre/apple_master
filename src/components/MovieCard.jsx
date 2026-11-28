@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { StarIcon } from './Icons'
 
 export default function MovieCard({ movie }) {
   const imageUrl = movie.poster_path?.startsWith('http')
@@ -7,8 +8,23 @@ export default function MovieCard({ movie }) {
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
       : 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=500&q=80'
 
-  const worldRating = movie.vote_average ? movie.vote_average.toFixed(1) : '-'
-  const friendsRating = movie.friends_average
+  const hasGlobalReviews =
+    movie.global_review_count > 0 &&
+    typeof movie.global_review_average === 'number'
+  const globalRating = hasGlobalReviews
+    ? movie.global_review_average
+    : typeof movie.vote_average !== 'number'
+      ? null
+      : movie.vote_average / 2
+  const globalRatingLabel =
+    typeof globalRating !== 'number' ? '-' : globalRating.toFixed(1)
+  const globalRatingDescription = hasGlobalReviews
+    ? `Keskiarvo ${movie.global_review_count} tietokannan arvostelusta.`
+    : 'Tietokannan arvosteluja ei vielä ole. Näytetään TMDB-arvosana muunnettuna asteikolle 0–5.'
+  const hasFriendReviews =
+    movie.friends_review_count > 0 &&
+    typeof movie.friends_average === 'number'
+  const friendsRating = hasFriendReviews
     ? movie.friends_average.toFixed(1)
     : 'Ei arvioita'
 
@@ -43,9 +59,19 @@ export default function MovieCard({ movie }) {
           {/* Arviot eriteltynä */}
           <div className="space-y-1.5 bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700/50 text-gray-800 dark:text-gray-200 text-xs">
             <div className="flex items-center justify-between text-gray-300">
-              <span className="text-xs text-gray-900 dark:text-white">Kaikki:</span>
+              <span className="flex items-center gap-1 text-xs text-gray-900 dark:text-white">
+                Kaikki:
+                <span
+                  title={globalRatingDescription}
+                  aria-label={globalRatingDescription}
+                  role="img"
+                  className="text-amber-400"
+                >
+                  <StarIcon className="size-3" />
+                </span>
+              </span>
               <span className="font-semibold text-amber-400">
-                {worldRating} / 10
+                {globalRatingLabel} / 5
               </span>
             </div>
             <div className="flex items-center justify-between text-gray-300">

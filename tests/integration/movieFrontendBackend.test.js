@@ -3,9 +3,15 @@ import request from 'supertest'
 import axios from 'axios'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import errorHandler from '../../api/middleware/errorHandler.js'
+import { pool } from '../../api/models/db.js'
 import movieRouter from '../../api/routes/movieRouter.js'
 
 vi.mock('axios')
+vi.mock('../../api/models/db.js', () => ({
+  pool: {
+    query: vi.fn(),
+  },
+}))
 
 const app = express()
 app.use(express.json())
@@ -15,6 +21,7 @@ app.use(errorHandler)
 describe('frontend-backend movie contract', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    pool.query.mockResolvedValue({ rows: [] })
   })
 
   test('Home frontend request receives an array of popular movies', async () => {

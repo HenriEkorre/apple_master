@@ -1,4 +1,51 @@
 import axios from 'axios'
+import { pool } from '../models/db.js'
+
+const attachReviewRatings = async (movies, userId) => {
+  if (movies.length === 0) return movies
+
+  const result = await pool.query(
+    `WITH friend_reviewers AS (
+       SELECT DISTINCT gm_other.user_id
+       FROM group_members gm_me
+       JOIN group_members gm_other ON gm_other.group_id = gm_me.group_id
+       WHERE gm_me.user_id = $2
+         AND gm_me.status = 'active'
+         AND gm_other.status = 'active'
+         AND gm_other.user_id <> $2
+     )
+     SELECT r.tmdb_movie_id,
+            ROUND(AVG(r.rating), 1)::float8 AS global_review_average,
+            COUNT(*)::int AS global_review_count,
+            ROUND(AVG(r.rating) FILTER (
+              WHERE friend_reviewers.user_id IS NOT NULL
+            ), 1)::float8 AS friends_average,
+            COUNT(*) FILTER (
+              WHERE friend_reviewers.user_id IS NOT NULL
+            )::int AS friends_review_count
+     FROM reviews r
+     LEFT JOIN friend_reviewers ON friend_reviewers.user_id = r.user_id
+     WHERE r.tmdb_movie_id = ANY($1::int[])
+       AND r.visibility = 'public'
+     GROUP BY r.tmdb_movie_id`,
+    [movies.map((movie) => movie.id), userId]
+  )
+
+  const ratingsByMovieId = new Map(
+    result.rows.map((row) => [row.tmdb_movie_id, row])
+  )
+
+  return movies.map((movie) => {
+    const ratings = ratingsByMovieId.get(movie.id)
+    return {
+      ...movie,
+      global_review_average: ratings?.global_review_average ?? null,
+      global_review_count: ratings?.global_review_count ?? 0,
+      friends_average: ratings?.friends_average ?? null,
+      friends_review_count: ratings?.friends_review_count ?? 0,
+    }
+  })
+}
 
 // Kontrollerifunktio suosittujen elokuvien hakemiseen TMDB:stä
 const getPopularMovies = async (req, res, next) => {
@@ -16,8 +63,11 @@ const getPopularMovies = async (req, res, next) => {
       },
     )
 
-    // Palautetaan elokuvataulukko eteenpäin asiakkaalle
-    res.status(200).json(response.data.results || [])
+    const movies = await attachReviewRatings(
+      response.data.results || [],
+      req.user?.id ?? null
+    )
+    res.status(200).json(movies)
   } catch (error) {
     // Siirretään virhe eteenpäin virheenkäsittelijälle (errorHandler)
     next(error)
@@ -126,8 +176,11 @@ const getTopRatedMovies = async (req, res, next) => {
       },
     )
 
-    // Palautetaan elokuvataulukko eteenpäin asiakkaalle
-    res.status(200).json(response.data.results || [])
+    const movies = await attachReviewRatings(
+      response.data.results || [],
+      req.user?.id ?? null
+    )
+    res.status(200).json(movies)
   } catch (error) {
     // Siirretään virhe eteenpäin virheenkäsittelijälle (errorHandler)
     next(error)

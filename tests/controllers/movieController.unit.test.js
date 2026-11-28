@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { pool } from '../../api/models/db.js'
 import {
   getMovieDetails,
   getPopularMovies,
@@ -7,6 +8,11 @@ import {
 } from '../../api/controllers/movieController.js'
 
 vi.mock('axios')
+vi.mock('../../api/models/db.js', () => ({
+  pool: {
+    query: vi.fn(),
+  },
+}))
 
 const createResponse = () => ({
   status: vi.fn().mockReturnThis(),
@@ -23,11 +29,60 @@ describe('movieController unit tests', () => {
     axios.get.mockResolvedValueOnce({
       data: { results: [{ id: 1, title: 'Inception' }] },
     })
+    pool.query.mockResolvedValueOnce({
+      rows: [
+        {
+          tmdb_movie_id: 1,
+          global_review_average: 4.5,
+          global_review_count: 2,
+          friends_average: 4,
+          friends_review_count: 1,
+        },
+      ],
+    })
 
     await getPopularMovies({}, response, vi.fn())
 
     expect(response.status).toHaveBeenCalledWith(200)
-    expect(response.json).toHaveBeenCalledWith([{ id: 1, title: 'Inception' }])
+    expect(response.json).toHaveBeenCalledWith([
+      {
+        id: 1,
+        title: 'Inception',
+        global_review_average: 4.5,
+        global_review_count: 2,
+        friends_average: 4,
+        friends_review_count: 1,
+      },
+    ])
+    expect(pool.query).toHaveBeenCalledWith(
+      expect.stringContaining('r.visibility = \'public\''),
+      [[1], null]
+    )
+  })
+
+  test('getPopularMovies scopes the group average to active shared members', async () => {
+    const response = createResponse()
+    axios.get.mockResolvedValueOnce({
+      data: { results: [{ id: 1, title: 'Inception' }] },
+    })
+    pool.query.mockResolvedValueOnce({ rows: [] })
+
+    await getPopularMovies({ user: { id: 7 } }, response, vi.fn())
+
+    const [query, parameters] = pool.query.mock.calls[0]
+    expect(query).toContain('gm_me.status = \'active\'')
+    expect(query).toContain('gm_other.status = \'active\'')
+    expect(parameters).toEqual([[1], 7])
+    expect(response.json).toHaveBeenCalledWith([
+      {
+        id: 1,
+        title: 'Inception',
+        global_review_average: null,
+        global_review_count: 0,
+        friends_average: null,
+        friends_review_count: 0,
+      },
+    ])
   })
 
   test('getPopularMovies calls next when TMDB rejects', async () => {
