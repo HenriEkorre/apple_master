@@ -4,14 +4,10 @@ import {
   saveMyReview,
   deleteMyReview,
   getMyReviews,
-  getGroupMovieReviews,
 } from '../controllers/reviewController.js'
 import { protect, optionalAuth } from '../middleware/authMiddleware.js'
 
 const router = express.Router()
-
-// Ryhmän jäsenten arvostelut tietystä elokuvasta (vaatii kirjautumisen)
-router.get('/movie/:tmdbId/groups', protect, getGroupMovieReviews)
 
 // Luku on avointa kaikille (kirjautunut saa lisäksi oman arvostelunsa)
 router.get('/movie/:tmdbId', optionalAuth, getMovieReviews)

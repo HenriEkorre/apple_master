@@ -3,10 +3,16 @@ import express from 'express'
 import movieRouter from '../../api/routes/movieRouter.js'
 import errorHandler from '../../api/middleware/errorHandler.js'
 import axios from 'axios'
+import { pool } from '../../api/models/db.js'
 import { describe, test, expect, beforeEach, vi } from 'vitest'
 
 // Mokataan axios Vitestin omalla vi.mock-funktiolla, jotta se korvaa oikean kirjaston valekirjastolla
 vi.mock('axios')
+vi.mock('../../api/models/db.js', () => ({
+  pool: {
+    query: vi.fn(),
+  },
+}))
 
 // Luodaan erillinen Express-sovellus testausta varten
 const app = express()
@@ -19,6 +25,7 @@ describe('Movie Controller - API Endpointit', () => {
   // Nollataan mokit jokaisen testin jälkeen
   beforeEach(() => {
     vi.clearAllMocks()
+    pool.query.mockResolvedValue({ rows: [] })
   })
 
   // 1. TESTI: Suosittujen elokuvien haku
